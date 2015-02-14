@@ -30,16 +30,17 @@ namespace {
 
     const int EMPTY = -1;
 
-    const int BOARD_W = 5, BOARD_H = 5;
-    const double BOARD_SHIFT_X = 40, BOARD_SHIFT_Y = 40;
-
     const ALLEGRO_COLOR FIELD_COLOR = al_map_rgb_f(1, 1, 0.5);
-    const double FIELD_WIDTH = 64;
+    const double FIELD_W = 64;
     const double FIELD_THICK = 2;
     const double FIELD_MARGIN = 0.025;
 
+    const int BOARD_W = 9, BOARD_H = 9;
+    const double BOARD_SHIFT_X = (SCREEN_W - (BOARD_W * FIELD_W)) / 2.0;
+    const double BOARD_SHIFT_Y = (SCREEN_H - (BOARD_H * FIELD_W)) / 2.0;
+
     const double BALL_THICK = 4;
-    const double BALL_RADIUS = 0.8 * (FIELD_WIDTH / 2.0);
+    const double BALL_RADIUS = 0.8 * (FIELD_W / 2.0);
     const std::array<ALLEGRO_COLOR, 8> BALL_COLORS {
         al_map_rgb_f(0, 0, 0),
         al_map_rgb_f(0, 0, 1),
@@ -475,7 +476,7 @@ class Kulki {
 
     glm::mat3 m_current_transform()
     {
-        return scale(FIELD_WIDTH) * translate(BOARD_SHIFT_X, BOARD_SHIFT_Y); 
+        return scale(FIELD_W) * translate(BOARD_SHIFT_X, BOARD_SHIFT_Y); 
     }
 
     void m_new_ball(int& x, int& y, int& color)

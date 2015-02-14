@@ -26,20 +26,20 @@ namespace {
     const double FRAME_REST = 0.001;
     const double MAX_FRAME_TIME = 0.25;
 
-    const double BG_R = 0.5, BG_G = 0.5, BG_B = 0.5;
+    const ALLEGRO_COLOR BG_COLOR = al_map_rgb_f(0.5, 0.5, 0.5);
 
     const int EMPTY = -1;
 
     const int BOARD_W = 5, BOARD_H = 5;
     const double BOARD_SHIFT_X = 40, BOARD_SHIFT_Y = 40;
 
-    const double FIELD_R = 1, FIELD_G = 1, FIELD_B = 0.5;
+    const ALLEGRO_COLOR FIELD_COLOR = al_map_rgb_f(1, 1, 0.5);
     const double FIELD_WIDTH = 64;
     const double FIELD_THICK = 2;
     const double FIELD_MARGIN = 0.025;
 
     const double BALL_THICK = 4;
-    const double BALL_RADIUS = 0.667 * (FIELD_WIDTH / 2.0);
+    const double BALL_RADIUS = 0.8 * (FIELD_WIDTH / 2.0);
     const std::array<ALLEGRO_COLOR, 8> BALL_COLORS {
         al_map_rgb_f(0, 0, 0),
         al_map_rgb_f(0, 0, 1),
@@ -56,7 +56,7 @@ namespace {
 
     const double MOVE_PERIOD = 0.25;
 
-    const double GAMEOVER_R = 1, GAMEOVER_G = 0, GAMEOVER_B = 0;
+    const ALLEGRO_COLOR GAMEOVER_COLOR = al_map_rgb_f(1, 0, 0);
     const int GAMEOVER_SHIFT_X = SCREEN_W / 2, GAMEOVER_SHIFT_Y = SCREEN_H / 2;
     const int GAMEOVER_FONT_SIZE = 64;
 }
@@ -400,7 +400,7 @@ void draw_field(
     glm::vec3 out_bot_right = bot_right * transf;
     double x1 = out_top_left.x, y1 = out_top_left.y;
     double x2 = out_bot_right.x, y2 = out_bot_right.y;
-    al_draw_rectangle(x1, y1, x2, y2, al_map_rgb_f(FIELD_R, FIELD_G, FIELD_B), FIELD_THICK);
+    al_draw_rectangle(x1, y1, x2, y2, FIELD_COLOR, FIELD_THICK);
 }
 
 void draw_ball(
@@ -601,7 +601,7 @@ class Kulki {
     void m_draw_gameover()
     {
         al_draw_text(
-            m_font, al_map_rgb_f(GAMEOVER_R, GAMEOVER_G, GAMEOVER_B),
+            m_font, GAMEOVER_COLOR,
             GAMEOVER_SHIFT_X, GAMEOVER_SHIFT_Y,
             ALLEGRO_ALIGN_CENTRE,
             "Game Over");
@@ -684,7 +684,7 @@ class Kulki {
     void m_draw(double)
     {
         glm::mat3 transf = m_current_transform();
-        al_clear_to_color(al_map_rgb_f(BG_R, BG_B, BG_G));
+        al_clear_to_color(BG_COLOR);
         draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
         switch (m_state)
         {

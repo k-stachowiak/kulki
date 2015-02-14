@@ -3,10 +3,20 @@
 #include <functional>
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <limits>
-#include <vector>
 #include <random>
+#include <vector>
 #include <deque>
+
+namespace std {
+    template <> struct hash<std::pair<int, int>> {
+        size_t operator()(const std::pair<int, int> &v) const {
+            std::hash<int> int_hasher;
+            return int_hasher(v.first) ^ int_hasher(v.second);
+        }
+    };
+}
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -30,7 +40,7 @@ namespace {
 
     const int EMPTY = -1;
 
-    const ALLEGRO_COLOR FIELD_COLOR = al_map_rgb_f(1, 1, 0.5);
+    const ALLEGRO_COLOR FIELD_COLOR = al_map_rgb_f(0.75, 0.75, 0.75);
     const double FIELD_W = 64;
     const double FIELD_THICK = 2;
     const double FIELD_MARGIN = 0.025;
@@ -41,7 +51,7 @@ namespace {
 
     const double BALL_THICK = 4;
     const double BALL_RADIUS = 0.8 * (FIELD_W / 2.0);
-    const std::array<ALLEGRO_COLOR, 8> BALL_COLORS {
+    const ALLEGRO_COLOR BALL_COLORS[] = {
         al_map_rgb_f(0, 0, 0),
         al_map_rgb_f(0, 0, 1),
         al_map_rgb_f(0, 1, 0),
@@ -52,23 +62,21 @@ namespace {
         al_map_rgb_f(1, 1, 1)
     };
 
+    const ALLEGRO_COLOR SCORE_COLOR = al_map_rgb_f(1, 1, 1);
+    const int SCORE_FONT_SIZE = 24;
+
+    const int STREAK_MIN = 3;
+
     const double DEAL_PERIOD = 0.25;
     const int DEAL_COUNT_INIT = 7, DEAL_COUNT_INGAME = 3;
 
     const double MOVE_PERIOD = 0.25;
 
+    const double SCORE_PERIOD = 1.0;
+
     const ALLEGRO_COLOR GAMEOVER_COLOR = al_map_rgb_f(1, 0, 0);
     const int GAMEOVER_SHIFT_X = SCREEN_W / 2, GAMEOVER_SHIFT_Y = SCREEN_H / 2;
     const int GAMEOVER_FONT_SIZE = 64;
-}
-
-namespace std {
-    template <> struct hash<std::pair<int, int>> {
-        size_t operator()(const std::pair<int, int> &v) const {
-            std::hash<int> int_hasher;
-            return int_hasher(v.first) ^ int_hasher(v.second);
-        }
-    };
 }
 
 class Allegro {
@@ -306,6 +314,54 @@ int free_fields(const Board& b)
     return std::count(begin(b.m_fields), end(b.m_fields), EMPTY);
 }
 
+std::vector<std::pair<int, int>> find_streak_part(
+        const Board& b,
+        const std::pair<int, int>& src,
+        int dx, int dy)
+{
+    std::vector<std::pair<int, int>> result;
+
+    int color = b(src.first, src.second);
+    int x = src.first, y = src.second;
+
+    while (b.has(x, y) && b(x, y) == color) {
+        result.emplace_back(x, y);
+        x += dx;
+        y += dy;
+    }
+
+    dx *= -1;
+    dy *= -1;
+    x = src.first + dx;
+    y = src.first + dy;
+
+    while (b.has(x, y) && b(x, y) == color) {
+        result.emplace_back(x, y);
+        x += dx;
+        y += dy;
+    }
+
+    return result;
+}
+
+bool find_streak(
+        const Board& b,
+        const std::pair<int, int>& src,
+        std::vector<std::pair<int, int>>& streak)
+{
+    std::vector<std::pair<int, int>> directions {
+        { 0, 1 }, { 1, 0 }, { 1, 1 }, { 1, -1 }
+    };
+
+    for (const auto& dir : directions) {
+        auto s = find_streak_part(b, src, dir.first, dir.second);
+        if (s.size() >= STREAK_MIN)
+            std::copy(begin(s), end(s), std::back_inserter(streak));
+    }
+
+    return !streak.empty();
+}
+
 bool find_path(
         const Board& b,
         std::pair<int, int> src, std::pair<int, int> dst,
@@ -393,15 +449,19 @@ glm::mat3 scale(double factor)
 // ----------------
 
 void draw_field(
-        const glm::vec3& top_left,
-        const glm::vec3& bot_right,
-        const glm::mat3& transf)
+        const glm::vec3& top_left, const glm::vec3& bot_right,
+        bool fill, const glm::mat3& transf)
 {
     glm::vec3 out_top_left = top_left * transf;
     glm::vec3 out_bot_right = bot_right * transf;
     double x1 = out_top_left.x, y1 = out_top_left.y;
     double x2 = out_bot_right.x, y2 = out_bot_right.y;
-    al_draw_rectangle(x1, y1, x2, y2, FIELD_COLOR, FIELD_THICK);
+
+    if (fill) {
+        al_draw_filled_rectangle(x1, y1, x2, y2, FIELD_COLOR);
+    } else {
+        al_draw_rectangle(x1, y1, x2, y2, FIELD_COLOR, FIELD_THICK);
+    }
 }
 
 void draw_ball(
@@ -421,12 +481,11 @@ void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
 {
     for (int x = 0; x < b.m_width; ++x) {
         for (int y = 0; y < b.m_height; ++y) {
-            if (x != hlx || y != hly) {
-                draw_field(
-                    glm::vec3 { x + FIELD_MARGIN, y + FIELD_MARGIN, 1.0 },
-                    glm::vec3 { x + 1.0 - FIELD_MARGIN, y + 1.0 - FIELD_MARGIN, 1.0 },
-                    transf);
-            }
+            draw_field(
+                glm::vec3 { x + FIELD_MARGIN, y + FIELD_MARGIN, 1.0 },
+                glm::vec3 { x + 1.0 - FIELD_MARGIN, y + 1.0 - FIELD_MARGIN, 1.0 },
+                x == hlx && y == hly,
+                transf);
             if (b(x, y) != EMPTY) {
                 draw_ball(
                     x + 0.5, y + 0.5, b(x, y), BALL_RADIUS,
@@ -441,7 +500,8 @@ enum KulkiState {
     WAIT_BALL,
     WAIT_DEST,
     MOVE,
-    GAMEOVER
+    GAMEOVER,
+    SCORE
 };
 
 class Kulki {
@@ -450,10 +510,12 @@ class Kulki {
 
     bool m_alive;
     Board m_board;
-    ALLEGRO_FONT* m_font;
+    ALLEGRO_FONT* m_gameover_font;
+    ALLEGRO_FONT* m_score_font;
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
+    int m_score;
 
     KulkiState m_state;
 
@@ -467,6 +529,10 @@ class Kulki {
     double m_move_time;
     int m_move_dst_x, m_move_dst_y;
     int m_move_color;
+
+    double m_score_time;
+    double m_score_cx, m_score_cy;
+    int m_score_incr;
 
     Kulki(const Kulki&);    // Not copyable ...
     Kulki(Kulki&&);         // ... or moveable.
@@ -483,7 +549,7 @@ class Kulki {
     {
         std::uniform_int_distribution<int> distr_x(0, m_board.m_width - 1);
         std::uniform_int_distribution<int> distr_y(0, m_board.m_height - 1);
-        std::uniform_int_distribution<int> distr_color(0, BALL_COLORS.size() - 1);
+        std::uniform_int_distribution<int> distr_color(0, sizeof(BALL_COLORS) / sizeof(*BALL_COLORS) - 1);
 
         do {
             x = distr_x(m_reng);
@@ -533,6 +599,31 @@ class Kulki {
         m_state = GAMEOVER;
     }
 
+    void m_set_state_score(int src_x, int src_y)
+    {
+        std::vector<std::pair<int, int>> streak;
+        if (!find_streak(m_board, { src_x, src_y }, streak)) {
+            m_set_state_deal(DEAL_COUNT_INGAME);
+            return;
+        }
+
+        int score_incr = 0;
+        int x_sum = 0, y_sum = 0;
+        for (const auto& p : streak) {
+            m_board(p.first, p.second) = EMPTY;
+            ++score_incr;
+            x_sum += p.first;
+            y_sum += p.second;
+        }
+        m_score += score_incr;
+
+        m_score_time = SCORE_PERIOD;
+        m_score_cx = double(x_sum) / double(streak.size()) + 0.5;
+        m_score_cy = double(y_sum) / double(streak.size()) + 0.5;
+        m_score_incr = score_incr;
+        m_state = SCORE;
+    }
+
     void m_set_state_move(int src_x, int src_y, int dst_x, int dst_y, int color)
     {
         std::deque<std::pair<int, int>> path;
@@ -576,8 +667,14 @@ class Kulki {
 
         if (m_move_path.empty()) {
             m_board(m_move_dst_x, m_move_dst_y) = m_move_color;
-            m_set_state_deal(DEAL_COUNT_INGAME);
+            m_set_state_score(m_move_dst_x, m_move_dst_y);
         }
+    }
+
+    void m_tick_score(double dt)
+    {
+        if ((m_score_time -= dt) > 0) return;
+        m_set_state_wait_ball();
     }
 
     // Draw implementations.
@@ -599,10 +696,20 @@ class Kulki {
         draw_ball(x + 0.5, y + 0.5, m_move_color, BALL_RADIUS, false, transf);
     }
 
+    void m_draw_score()
+    {
+        glm::vec3 text_center = glm::vec3 { m_score_cx, m_score_cy, 1 } * m_current_transform();
+        al_draw_textf(
+            m_score_font, SCORE_COLOR,
+            text_center.x, text_center.y,
+            ALLEGRO_ALIGN_CENTRE,
+            "+%d", m_score_incr);
+    }
+
     void m_draw_gameover()
     {
         al_draw_text(
-            m_font, GAMEOVER_COLOR,
+            m_gameover_font, GAMEOVER_COLOR,
             GAMEOVER_SHIFT_X, GAMEOVER_SHIFT_Y,
             ALLEGRO_ALIGN_CENTRE,
             "Game Over");
@@ -613,16 +720,15 @@ class Kulki {
 
     void m_on_key(int key, bool down)
     {
-        if (key == ALLEGRO_KEY_ESCAPE && down)
-        {
+        if (key == ALLEGRO_KEY_ESCAPE && down) {
             m_alive = false;
             return;
         }
 
-        switch (m_state)
-        {
+        switch (m_state) {
         case GAMEOVER:
             m_board.clear();
+            m_score = 0;
             m_set_state_deal(DEAL_COUNT_INIT);
             break;
         default:
@@ -677,6 +783,9 @@ class Kulki {
         case MOVE:
             m_tick_move(dt);
             break;
+        case SCORE:
+            m_tick_score(dt);
+            break;
         default:
             break;
         }
@@ -685,8 +794,17 @@ class Kulki {
     void m_draw(double)
     {
         glm::mat3 transf = m_current_transform();
+
         al_clear_to_color(BG_COLOR);
+
         draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
+
+        al_draw_textf(
+            m_score_font, SCORE_COLOR,
+            0, 0,
+            ALLEGRO_ALIGN_LEFT,
+            "Score : %d", m_score);
+
         switch (m_state)
         {
         case WAIT_DEST:
@@ -695,12 +813,16 @@ class Kulki {
         case MOVE:
             m_draw_move();
             break;
+        case SCORE:
+            m_draw_score();
+            break;
         case GAMEOVER:
             m_draw_gameover();
             break;
         default:
             break;
         }
+
         al_flip_display();
     }
 
@@ -708,14 +830,19 @@ public:
     Kulki() :
         m_alive { true },
         m_board { BOARD_W, BOARD_H },
-        m_font { al_load_font("prstartk.ttf", -GAMEOVER_FONT_SIZE, 0) }
+        m_gameover_font { al_load_font("prstartk.ttf", -GAMEOVER_FONT_SIZE, 0) },
+        m_score_font { al_load_font("prstartk.ttf", -SCORE_FONT_SIZE, 0) },
+        m_cursor_screen { -1, -1 },
+        m_cursor_tile { -1, -1 },
+        m_score { 0 }
     {
         m_set_state_deal(DEAL_COUNT_INIT);
     }
 
     ~Kulki()
     {
-        al_destroy_font(m_font);
+        al_destroy_font(m_gameover_font);
+        al_destroy_font(m_score_font);
     }
 
     void run(Allegro& al)

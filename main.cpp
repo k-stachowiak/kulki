@@ -18,6 +18,49 @@
 
 #include <glm/glm.hpp>
 
+namespace {
+    const int SCREEN_W = 800;
+    const int SCREEN_H = 800;
+    const double FPS = 50.0;
+
+    const double FRAME_REST = 0.001;
+    const double MAX_FRAME_TIME = 0.25;
+
+    const double BG_R = 0.5, BG_G = 0.5, BG_B = 0.5;
+
+    const int EMPTY = -1;
+
+    const int BOARD_W = 5, BOARD_H = 5;
+    const double BOARD_SHIFT_X = 40, BOARD_SHIFT_Y = 40;
+
+    const double FIELD_R = 1, FIELD_G = 1, FIELD_B = 0.5;
+    const double FIELD_WIDTH = 64;
+    const double FIELD_THICK = 2;
+    const double FIELD_MARGIN = 0.025;
+
+    const double BALL_THICK = 4;
+    const double BALL_RADIUS = 0.667 * (FIELD_WIDTH / 2.0);
+    const std::array<ALLEGRO_COLOR, 8> BALL_COLORS {
+        al_map_rgb_f(0, 0, 0),
+        al_map_rgb_f(0, 0, 1),
+        al_map_rgb_f(0, 1, 0),
+        al_map_rgb_f(0, 1, 1),
+        al_map_rgb_f(1, 0, 0),
+        al_map_rgb_f(1, 0, 1),
+        al_map_rgb_f(1, 1, 0),
+        al_map_rgb_f(1, 1, 1)
+    };
+
+    const double DEAL_PERIOD = 0.25;
+    const int DEAL_COUNT_INIT = 7, DEAL_COUNT_INGAME = 3;
+
+    const double MOVE_PERIOD = 0.25;
+
+    const double GAMEOVER_R = 1, GAMEOVER_G = 0, GAMEOVER_B = 0;
+    const int GAMEOVER_SHIFT_X = SCREEN_W / 2, GAMEOVER_SHIFT_Y = SCREEN_H / 2;
+    const int GAMEOVER_FONT_SIZE = 64;
+}
+
 namespace std {
     template <> struct hash<std::pair<int, int>> {
         size_t operator()(const std::pair<int, int> &v) const {
@@ -84,13 +127,12 @@ class Allegro {
     template <typename TickEvent, typename DrawEvent>
     void m_realtime_loop_step(TickEvent tick, DrawEvent draw, bool& alive)
     {
-        static const double max_frame_time = 0.25;
         const double new_time = al_get_time();
         
         double frame_time = new_time - m_current_time;
 
-        if (frame_time > max_frame_time) {
-            frame_time = max_frame_time;
+        if (frame_time > MAX_FRAME_TIME) {
+            frame_time = MAX_FRAME_TIME;
         }
 
         m_current_time = new_time;
@@ -108,8 +150,8 @@ class Allegro {
 
 public:
     Allegro() :
-        m_screen_w { 800 }, m_screen_h { 800 },
-        m_fps { 50.0 }, m_spf { 1.0 / m_fps },
+        m_screen_w { SCREEN_W }, m_screen_h { SCREEN_H },
+        m_fps { FPS }, m_spf { 1.0 / m_fps },
         m_display { nullptr }, m_ev_queue { nullptr }
     {
         if (!al_init()) {
@@ -200,13 +242,11 @@ public:
             m_realtime_loop_step(tick, draw, alive);
             if (!alive) return;
 
-            al_rest(0.001);
+            al_rest(FRAME_REST);
         }
     }
     
 };
-
-const int EMPTY = -1;
 
 struct Board {
 
@@ -348,15 +388,10 @@ glm::mat3 scale(double factor)
     };
 }
 
-/// Draw point.
-void draw(const glm::vec3& p, const glm::mat3& transf)
-{
-    glm::vec3 out_p = p * transf;
-    al_draw_pixel(out_p.x, out_p.y, al_map_rgb_f(1, 1, 1));
-}
+// Drawing details.
+// ----------------
 
-/// Draw rectangle.
-void draw(
+void draw_field(
         const glm::vec3& top_left,
         const glm::vec3& bot_right,
         const glm::mat3& transf)
@@ -365,41 +400,36 @@ void draw(
     glm::vec3 out_bot_right = bot_right * transf;
     double x1 = out_top_left.x, y1 = out_top_left.y;
     double x2 = out_bot_right.x, y2 = out_bot_right.y;
-    al_draw_rectangle(x1, y1, x2, y2, al_map_rgb_f(1, 1, 0.5), 1.0);
+    al_draw_rectangle(x1, y1, x2, y2, al_map_rgb_f(FIELD_R, FIELD_G, FIELD_B), FIELD_THICK);
 }
 
-/// Draw ball.
-void draw(double x, double y, int color, double r, bool fill, const glm::mat3& transf)
+void draw_ball(
+        double x, double y, int color, double r,
+        bool fill, const glm::mat3& transf)
 {
-    static std::array<ALLEGRO_COLOR, 8> ball_colors {
-        al_map_rgb_f(0, 0, 0),
-        al_map_rgb_f(0, 0, 1),
-        al_map_rgb_f(0, 1, 0),
-        al_map_rgb_f(0, 1, 1),
-        al_map_rgb_f(1, 0, 0),
-        al_map_rgb_f(1, 0, 1),
-        al_map_rgb_f(1, 1, 0),
-        al_map_rgb_f(1, 1, 1)
-    };
-
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
 
     if (fill) {
-        al_draw_filled_circle(c.x, c.y, r, ball_colors[color]);
+        al_draw_filled_circle(c.x, c.y, r, BALL_COLORS[color]);
     } else {
-        al_draw_circle(c.x, c.y, r, ball_colors[color], 3);
+        al_draw_circle(c.x, c.y, r, BALL_COLORS[color], BALL_THICK);
     }
 }
 
-void draw(const Board& b, int hlx, int hly, const glm::mat3& transf)
+void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
 {
     for (int x = 0; x < b.m_width; ++x) {
         for (int y = 0; y < b.m_height; ++y) {
             if (x != hlx || y != hly) {
-                draw(glm::vec3 { x + 0.05, y + 0.05, 1.0 }, glm::vec3 { x + 0.95, y + 0.95, 1.0 }, transf);
+                draw_field(
+                    glm::vec3 { x + FIELD_MARGIN, y + FIELD_MARGIN, 1.0 },
+                    glm::vec3 { x + 1.0 - FIELD_MARGIN, y + 1.0 - FIELD_MARGIN, 1.0 },
+                    transf);
             }
             if (b(x, y) != EMPTY) {
-                draw(x + 0.5, y + 0.5, b(x, y), 25, true, transf);
+                draw_ball(
+                    x + 0.5, y + 0.5, b(x, y), BALL_RADIUS,
+                    true, transf);
             }
         }
     }
@@ -445,14 +475,14 @@ class Kulki {
 
     glm::mat3 m_current_transform()
     {
-        return scale(64.0) * translate(20, 40); 
+        return scale(FIELD_WIDTH) * translate(BOARD_SHIFT_X, BOARD_SHIFT_Y); 
     }
 
     void m_new_ball(int& x, int& y, int& color)
     {
         std::uniform_int_distribution<int> distr_x(0, m_board.m_width - 1);
         std::uniform_int_distribution<int> distr_y(0, m_board.m_height - 1);
-        std::uniform_int_distribution<int> distr_color(0, 7);
+        std::uniform_int_distribution<int> distr_color(0, BALL_COLORS.size() - 1);
 
         do {
             x = distr_x(m_reng);
@@ -493,7 +523,7 @@ class Kulki {
         }
 
         m_deal_count = count;
-        m_deal_time = 0.25;
+        m_deal_time = DEAL_PERIOD;
         m_state = DEAL;
     }
 
@@ -512,7 +542,7 @@ class Kulki {
         }
 
         m_move_path = std::move(path);
-        m_move_time = 0.25;
+        m_move_time = MOVE_PERIOD;
         m_move_dst_x = dst_x;
         m_move_dst_y = dst_y;
         m_move_color = color;
@@ -525,7 +555,7 @@ class Kulki {
     void m_tick_deal(double dt)
     {
         if ((m_deal_time -= dt) > 0) return;
-        else m_deal_time = 0.25;
+        else m_deal_time = DEAL_PERIOD;
 
         int x, y, color;
         m_new_ball(x, y, color);
@@ -539,13 +569,13 @@ class Kulki {
     void m_tick_move(double dt)
     {
         if ((m_move_time -= dt) > 0) return;
-        else m_move_time = 0.25;
+        else m_move_time = MOVE_PERIOD;
 
         m_move_path.pop_front();
 
         if (m_move_path.empty()) {
             m_board(m_move_dst_x, m_move_dst_y) = m_move_color;
-            m_set_state_deal(3);
+            m_set_state_deal(DEAL_COUNT_INGAME);
         }
     }
 
@@ -557,7 +587,7 @@ class Kulki {
         glm::mat3 transf = m_current_transform();
         int x = m_waitd_src_x;
         int y = m_waitd_src_y;
-        draw(x + 0.5, y + 0.5, m_waitd_color, 25, false, transf);
+        draw_ball(x + 0.5, y + 0.5, m_waitd_color, BALL_RADIUS, false, transf);
     }
 
     void m_draw_move()
@@ -565,12 +595,16 @@ class Kulki {
         glm::mat3 transf = m_current_transform();
         int x = m_move_path.front().first;
         int y = m_move_path.front().second;
-        draw(x + 0.5, y + 0.5, m_move_color, 25, false, transf);
+        draw_ball(x + 0.5, y + 0.5, m_move_color, BALL_RADIUS, false, transf);
     }
 
     void m_draw_gameover()
     {
-        al_draw_text(m_font, al_map_rgb_f(1, 0, 0), 400, 400, ALLEGRO_ALIGN_CENTRE, "Game Over");
+        al_draw_text(
+            m_font, al_map_rgb_f(GAMEOVER_R, GAMEOVER_G, GAMEOVER_B),
+            GAMEOVER_SHIFT_X, GAMEOVER_SHIFT_Y,
+            ALLEGRO_ALIGN_CENTRE,
+            "Game Over");
     }
 
     // Common implementations.
@@ -588,7 +622,7 @@ class Kulki {
         {
         case GAMEOVER:
             m_board.clear();
-            m_set_state_deal(7);
+            m_set_state_deal(DEAL_COUNT_INIT);
             break;
         default:
             break;
@@ -650,8 +684,8 @@ class Kulki {
     void m_draw(double)
     {
         glm::mat3 transf = m_current_transform();
-        al_clear_to_color(al_map_rgb_f(0.5, 0.5, 0.5));
-        draw(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
+        al_clear_to_color(al_map_rgb_f(BG_R, BG_B, BG_G));
+        draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
         switch (m_state)
         {
         case WAIT_DEST:
@@ -672,10 +706,10 @@ class Kulki {
 public:
     Kulki() :
         m_alive { true },
-        m_board { 5, 5 },
-        m_font { al_load_font("prstartk.ttf", -64, 0) }
+        m_board { BOARD_W, BOARD_H },
+        m_font { al_load_font("prstartk.ttf", -GAMEOVER_FONT_SIZE, 0) }
     {
-        m_set_state_deal(7);
+        m_set_state_deal(DEAL_COUNT_INIT);
     }
 
     ~Kulki()

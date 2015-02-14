@@ -19,14 +19,32 @@ namespace std {
 }
 
 #include <allegro5/allegro.h>
-#include <allegro5/allegro_image.h>
-#include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_image.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_primitives.h>
 
 #include <glm/glm.hpp>
+
+glm::mat3 translate(double x, double y)
+{
+    return {
+        1, 0, x,
+        0, 1, y,
+        0, 0, 1
+    };
+}
+
+glm::mat3 scale(double factor)
+{
+    return {
+        factor, 0, 0,
+        0, factor, 0,
+        0, 0, 1
+    };
+}
 
 namespace {
     const int SCREEN_W = 800;
@@ -288,6 +306,16 @@ struct Board {
     {}
 
     // API:
+    int &operator()(int x, int y)
+    {
+        return m_fields[y * m_width + x];
+    }
+
+    int operator()(int x, int y) const
+    {
+        return const_cast<Board&>(*this)(x, y);
+    }
+
     void clear()
     {
         std::fill(begin(m_fields), end(m_fields), EMPTY);
@@ -298,152 +326,116 @@ struct Board {
         return x >= 0 && x < m_width && y >= 0 && y < m_height;
     }
 
-    int &operator()(int x, int y)
+    int free_fields()
     {
-        return m_fields[y * m_width + x];
+        return std::count(begin(m_fields), end(m_fields), EMPTY);
     }
 
-    int operator()(int x, int y) const
+    std::vector<std::pair<int, int>> m_find_streak_part(const std::pair<int, int>& src, int dx, int dy)
     {
-        return const_cast<Board&>(*this)(x, y);
-    }
-};
+        std::vector<std::pair<int, int>> result;
 
-int free_fields(const Board& b)
-{
-    return std::count(begin(b.m_fields), end(b.m_fields), EMPTY);
-}
+        int color = (*this)(src.first, src.second);
+        int x = src.first, y = src.second;
 
-std::vector<std::pair<int, int>> find_streak_part(
-        const Board& b,
-        const std::pair<int, int>& src,
-        int dx, int dy)
-{
-    std::vector<std::pair<int, int>> result;
-
-    int color = b(src.first, src.second);
-    int x = src.first, y = src.second;
-
-    while (b.has(x, y) && b(x, y) == color) {
-        result.emplace_back(x, y);
-        x += dx;
-        y += dy;
-    }
-
-    dx *= -1;
-    dy *= -1;
-    x = src.first + dx;
-    y = src.first + dy;
-
-    while (b.has(x, y) && b(x, y) == color) {
-        result.emplace_back(x, y);
-        x += dx;
-        y += dy;
-    }
-
-    return result;
-}
-
-bool find_streak(
-        const Board& b,
-        const std::pair<int, int>& src,
-        std::vector<std::pair<int, int>>& streak)
-{
-    std::vector<std::pair<int, int>> directions {
-        { 0, 1 }, { 1, 0 }, { 1, 1 }, { 1, -1 }
-    };
-
-    for (const auto& dir : directions) {
-        auto s = find_streak_part(b, src, dir.first, dir.second);
-        if (s.size() >= STREAK_MIN)
-            std::copy(begin(s), end(s), std::back_inserter(streak));
-    }
-
-    return !streak.empty();
-}
-
-bool find_path(
-        const Board& b,
-        std::pair<int, int> src, std::pair<int, int> dst,
-        std::deque<std::pair<int, int>>& path)
-{
-    std::unordered_set<std::pair<int, int>> open;
-    std::unordered_map<std::pair<int, int>, std::pair<int, int>> preds;
-    std::unordered_map<std::pair<int, int>, int> dists;
-
-    for (int x = 0; x < b.m_width; ++x) {
-        for (int y = 0; y < b.m_height; ++y) {
-            dists[std::pair<int, int>(x, y)] = std::numeric_limits<int>::max();
-        }
-    }
-
-    open.insert(src);
-    dists[src] = 0;
-
-    while (!open.empty()) {
-
-        auto it = std::min_element(begin(open), end(open),
-            [&dists](const std::pair<int, int>& x, const std::pair<int, int>& y) {
-                return dists[x] < dists[y];
-            });
-
-        std::pair<int, int> u = *it;
-        if (u == dst) {
-            break;
+        while (has(x, y) && (*this)(x, y) == color) {
+            result.emplace_back(x, y);
+            x += dx;
+            y += dy;
         }
 
-        std::vector<std::pair<int, int>> neighbors {
-            { u.first - 1, u.second },
-            { u.first + 1, u.second },
-            { u.first, u.second - 1 },
-            { u.first, u.second + 1 },
+        dx *= -1;
+        dy *= -1;
+        x = src.first + dx;
+        y = src.first + dy;
+
+        while (has(x, y) && (*this)(x, y) == color) {
+            result.emplace_back(x, y);
+            x += dx;
+            y += dy;
+        }
+
+        return result;
+    }
+
+    bool find_streak(const std::pair<int, int>& src, std::vector<std::pair<int, int>>& streak)
+    {
+        std::vector<std::pair<int, int>> directions {
+            { 0, 1 }, { 1, 0 }, { 1, 1 }, { 1, -1 }
         };
 
-        int new_dist = dists[u] + 1;
-        for (const auto& v : neighbors) {
-            if (b(v.first, v.second) != EMPTY) {
-                continue;
-            }
-            if (new_dist < dists[v]) {
-                dists[v] = new_dist;
-                preds[v] = u;
-                open.insert(v);
+        for (const auto& dir : directions) {
+            auto s = m_find_streak_part(src, dir.first, dir.second);
+            if (s.size() >= STREAK_MIN)
+                std::copy(begin(s), end(s), std::back_inserter(streak));
+        }
+
+        return !streak.empty();
+    }
+
+    bool find_path(std::pair<int, int> src, std::pair<int, int> dst, std::deque<std::pair<int, int>>& path)
+    {
+        std::unordered_set<std::pair<int, int>> open;
+        std::unordered_map<std::pair<int, int>, std::pair<int, int>> preds;
+        std::unordered_map<std::pair<int, int>, int> dists;
+
+        for (int x = 0; x < m_width; ++x) {
+            for (int y = 0; y < m_height; ++y) {
+                dists[std::pair<int, int>(x, y)] = std::numeric_limits<int>::max();
             }
         }
 
-        open.erase(u);
-    }
+        open.insert(src);
+        dists[src] = 0;
 
-    if (dists[dst] == std::numeric_limits<int>::max()) {
-        return false;
-    } else {
-        std::pair<int, int> n = dst;
-        while (n != src) {
+        while (!open.empty()) {
+
+            auto it = std::min_element(begin(open), end(open),
+                [&dists](const std::pair<int, int>& x, const std::pair<int, int>& y) {
+                    return dists[x] < dists[y];
+                });
+
+            std::pair<int, int> u = *it;
+            if (u == dst) {
+                break;
+            }
+
+            std::vector<std::pair<int, int>> neighbors {
+                { u.first - 1, u.second },
+                { u.first + 1, u.second },
+                { u.first, u.second - 1 },
+                { u.first, u.second + 1 },
+            };
+
+            int new_dist = dists[u] + 1;
+            for (const auto& v : neighbors) {
+                if ((*this)(v.first, v.second) != EMPTY) {
+                    continue;
+                }
+                if (new_dist < dists[v]) {
+                    dists[v] = new_dist;
+                    preds[v] = u;
+                    open.insert(v);
+                }
+            }
+
+            open.erase(u);
+        }
+
+        if (dists[dst] == std::numeric_limits<int>::max()) {
+            return false;
+        } else {
+            std::pair<int, int> n = dst;
+            while (n != src) {
+                path.push_front(n);
+                n = preds[n];
+            }
             path.push_front(n);
-            n = preds[n];
+            return true;
         }
-        path.push_front(n);
-        return true;
     }
-}
 
-glm::mat3 translate(double x, double y)
-{
-    return {
-        1, 0, x,
-        0, 1, y,
-        0, 0, 1
-    };
-}
-
-glm::mat3 scale(double factor)
-{
-    return {
-        factor, 0, 0,
-        0, factor, 0,
-        0, 0, 1
-    };
-}
+};
 
 // Drawing details.
 // ----------------
@@ -584,7 +576,7 @@ class Kulki {
 
     void m_set_state_deal(int count)
     {
-        if (free_fields(m_board) <= count) {
+        if (m_board.free_fields() <= count) {
             m_set_state_gameover();
             return;
         }
@@ -602,7 +594,7 @@ class Kulki {
     void m_set_state_score(int src_x, int src_y)
     {
         std::vector<std::pair<int, int>> streak;
-        if (!find_streak(m_board, { src_x, src_y }, streak)) {
+        if (!m_board.find_streak({ src_x, src_y }, streak)) {
             m_set_state_deal(DEAL_COUNT_INGAME);
             return;
         }
@@ -628,7 +620,7 @@ class Kulki {
     {
         std::deque<std::pair<int, int>> path;
 
-        if (!find_path(m_board, { src_x, src_y }, { dst_x, dst_y }, path)) {
+        if (!m_board.find_path({ src_x, src_y }, { dst_x, dst_y }, path)) {
             m_reset_state_wait_ball(src_x, src_y, color);
             return;
         }

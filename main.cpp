@@ -83,7 +83,7 @@ namespace {
     const ALLEGRO_COLOR SCORE_COLOR = al_map_rgb_f(1, 1, 1);
     const int SCORE_FONT_SIZE = 24;
 
-    const int STREAK_MIN = 3;
+    const int STREAK_MIN = 5;
 
     const double DEAL_PERIOD = 0.25;
     const int DEAL_COUNT_INIT = 7, DEAL_COUNT_INGAME = 3;
@@ -347,7 +347,7 @@ struct Board {
         dx *= -1;
         dy *= -1;
         x = src.first + dx;
-        y = src.first + dy;
+        y = src.second + dy;
 
         while (has(x, y) && (*this)(x, y) == color) {
             result.emplace_back(x, y);
@@ -487,17 +487,18 @@ void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
     }
 }
 
-enum KulkiState {
-    DEAL,
-    WAIT_BALL,
-    WAIT_DEST,
-    MOVE,
-    GAMEOVER,
-    SCORE
-};
-
 class Kulki {
 
+    enum class State {
+        DEAL,
+        WAIT_BALL,
+        WAIT_DEST,
+        MOVE,
+        GAMEOVER,
+        SCORE
+    };
+
+    std::random_device m_rdev;
     std::default_random_engine m_reng;
 
     bool m_alive;
@@ -509,7 +510,7 @@ class Kulki {
     std::pair<int, int> m_cursor_tile;
     int m_score;
 
-    KulkiState m_state;
+    State m_state;
 
     int m_deal_count;
     double m_deal_time;
@@ -556,13 +557,13 @@ class Kulki {
 
     void m_set_state_wait_ball()
     {
-        m_state = WAIT_BALL;
+        m_state = State::WAIT_BALL;
     }
 
     void m_reset_state_wait_ball(int src_x, int src_y, int color)
     {
         m_board(src_x, src_y) = color;
-        m_state = WAIT_BALL;
+        m_state = State::WAIT_BALL;
     }
 
     void m_set_state_wait_dest(int src_x, int src_y)
@@ -571,7 +572,7 @@ class Kulki {
         m_waitd_src_y = src_y;
         m_waitd_color = m_board(src_x, src_y);
         m_board(src_x, src_y) = EMPTY;
-        m_state = WAIT_DEST;
+        m_state = State::WAIT_DEST;
     }
 
     void m_set_state_deal(int count)
@@ -583,12 +584,12 @@ class Kulki {
 
         m_deal_count = count;
         m_deal_time = DEAL_PERIOD;
-        m_state = DEAL;
+        m_state = State::DEAL;
     }
 
     void m_set_state_gameover()
     {
-        m_state = GAMEOVER;
+        m_state = State::GAMEOVER;
     }
 
     void m_set_state_score(int src_x, int src_y)
@@ -613,7 +614,7 @@ class Kulki {
         m_score_cx = double(x_sum) / double(streak.size()) + 0.5;
         m_score_cy = double(y_sum) / double(streak.size()) + 0.5;
         m_score_incr = score_incr;
-        m_state = SCORE;
+        m_state = State::SCORE;
     }
 
     void m_set_state_move(int src_x, int src_y, int dst_x, int dst_y, int color)
@@ -630,7 +631,7 @@ class Kulki {
         m_move_dst_x = dst_x;
         m_move_dst_y = dst_y;
         m_move_color = color;
-        m_state = MOVE;
+        m_state = State::MOVE;
     }
 
     // Tick implementations.
@@ -718,7 +719,7 @@ class Kulki {
         }
 
         switch (m_state) {
-        case GAMEOVER:
+        case State::GAMEOVER:
             m_board.clear();
             m_score = 0;
             m_set_state_deal(DEAL_COUNT_INIT);
@@ -736,12 +737,12 @@ class Kulki {
         int ty = m_cursor_tile.second;
 
         switch (m_state) {
-        case WAIT_BALL:
+        case State::WAIT_BALL:
             if (m_board.has(tx, ty)) {
                 m_set_state_wait_dest(tx, ty);
             }
             break;
-        case WAIT_DEST:
+        case State::WAIT_DEST:
             if (tx == m_waitd_src_x && ty == m_waitd_src_y) {
                 m_reset_state_wait_ball(m_waitd_src_x, m_waitd_src_y, m_waitd_color);
             } else {
@@ -769,13 +770,13 @@ class Kulki {
     void m_tick(double dt)
     {
         switch (m_state) {
-        case DEAL:
+        case State::DEAL:
             m_tick_deal(dt);
             break;
-        case MOVE:
+        case State::MOVE:
             m_tick_move(dt);
             break;
-        case SCORE:
+        case State::SCORE:
             m_tick_score(dt);
             break;
         default:
@@ -799,16 +800,16 @@ class Kulki {
 
         switch (m_state)
         {
-        case WAIT_DEST:
+        case State::WAIT_DEST:
             m_draw_wait_dest();
             break;
-        case MOVE:
+        case State::MOVE:
             m_draw_move();
             break;
-        case SCORE:
+        case State::SCORE:
             m_draw_score();
             break;
-        case GAMEOVER:
+        case State::GAMEOVER:
             m_draw_gameover();
             break;
         default:
@@ -820,6 +821,7 @@ class Kulki {
 
 public:
     Kulki() :
+        m_reng { m_rdev() },
         m_alive { true },
         m_board { BOARD_W, BOARD_H },
         m_gameover_font { al_load_font("prstartk.ttf", -GAMEOVER_FONT_SIZE, 0) },

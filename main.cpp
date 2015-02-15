@@ -358,19 +358,23 @@ struct Board {
         return result;
     }
 
-    bool find_streak(const std::pair<int, int>& src, std::vector<std::pair<int, int>>& streak)
+    template <typename Out>
+    bool find_streak(const std::pair<int, int>& src, Out out)
     {
+        int inserts = 0;
         std::vector<std::pair<int, int>> directions {
             { 0, 1 }, { 1, 0 }, { 1, 1 }, { 1, -1 }
         };
 
         for (const auto& dir : directions) {
             auto s = m_find_streak_part(src, dir.first, dir.second);
-            if (s.size() >= STREAK_MIN)
-                std::copy(begin(s), end(s), std::back_inserter(streak));
+            if (s.size() >= STREAK_MIN) {
+                std::copy(begin(s), end(s), out);
+                ++inserts;
+            }
         }
 
-        return !streak.empty();
+        return inserts > 0;
     }
 
     bool find_path(std::pair<int, int> src, std::pair<int, int> dst, std::deque<std::pair<int, int>>& path)
@@ -514,6 +518,7 @@ class Kulki {
 
     int m_deal_count;
     double m_deal_time;
+    std::vector<std::pair<int, int>> m_deal_positions;
 
     int m_waitd_src_x, m_waitd_src_y;
     int m_waitd_color;
@@ -563,7 +568,7 @@ class Kulki {
     void m_reset_state_wait_ball(int src_x, int src_y, int color)
     {
         m_board(src_x, src_y) = color;
-        m_state = State::WAIT_BALL;
+        m_set_state_wait_ball();
     }
 
     void m_set_state_wait_dest(int src_x, int src_y)
@@ -575,6 +580,12 @@ class Kulki {
         m_state = State::WAIT_DEST;
     }
 
+    void m_reset_state_wait_dest(int src_x, int src_y)
+    {
+        m_board(m_waitd_src_x, m_waitd_src_y) = m_waitd_color;
+        m_set_state_wait_dest(src_x, src_y);
+    }
+
     void m_set_state_deal(int count)
     {
         if (m_board.free_fields() <= count) {
@@ -584,6 +595,7 @@ class Kulki {
 
         m_deal_count = count;
         m_deal_time = DEAL_PERIOD;
+        m_deal_positions.clear();
         m_state = State::DEAL;
     }
 
@@ -592,17 +604,31 @@ class Kulki {
         m_state = State::GAMEOVER;
     }
 
-    void m_set_state_score(int src_x, int src_y)
+    void m_set_state_score(const std::vector<std::pair<int, int>>& changes, State next_state)
     {
-        std::vector<std::pair<int, int>> streak;
-        if (!m_board.find_streak({ src_x, src_y }, streak)) {
-            m_set_state_deal(DEAL_COUNT_INGAME);
-            return;
+        std::unordered_set<std::pair<int, int>> streaks;
+        bool success = false;
+
+        for (const auto& p : changes) {
+            success |= m_board.find_streak(p, std::inserter(streaks, begin(streaks)));
+        }
+
+        if (!success) {
+            switch (next_state) {
+            case State::DEAL:
+                m_set_state_deal(DEAL_COUNT_INGAME);
+                return;
+            case State::WAIT_BALL:
+                m_set_state_wait_ball();
+                return;
+            default:
+                throw std::domain_error("m_set_state_score: bad next_state argument");
+            }
         }
 
         int score_incr = 0;
         int x_sum = 0, y_sum = 0;
-        for (const auto& p : streak) {
+        for (const auto& p : streaks) {
             m_board(p.first, p.second) = EMPTY;
             ++score_incr;
             x_sum += p.first;
@@ -611,8 +637,8 @@ class Kulki {
         m_score += score_incr;
 
         m_score_time = SCORE_PERIOD;
-        m_score_cx = double(x_sum) / double(streak.size()) + 0.5;
-        m_score_cy = double(y_sum) / double(streak.size()) + 0.5;
+        m_score_cx = double(x_sum) / double(streaks.size()) + 0.5;
+        m_score_cy = double(y_sum) / double(streaks.size()) + 0.5;
         m_score_incr = score_incr;
         m_state = State::SCORE;
     }
@@ -645,9 +671,10 @@ class Kulki {
         int x, y, color;
         m_new_ball(x, y, color);
         m_board(x, y) = color;
+        m_deal_positions.emplace_back(x, y);
 
         if ((--m_deal_count) == 0) {
-            m_set_state_wait_ball();
+            m_set_state_score(m_deal_positions, State::WAIT_BALL);
         }
     }
 
@@ -660,7 +687,7 @@ class Kulki {
 
         if (m_move_path.empty()) {
             m_board(m_move_dst_x, m_move_dst_y) = m_move_color;
-            m_set_state_score(m_move_dst_x, m_move_dst_y);
+            m_set_state_score({ { m_move_dst_x, m_move_dst_y } }, State::DEAL);
         }
     }
 
@@ -735,16 +762,21 @@ class Kulki {
 
         int tx = m_cursor_tile.first;
         int ty = m_cursor_tile.second;
+        if (!m_board.has(tx, ty)) {
+            return;
+        }
 
         switch (m_state) {
         case State::WAIT_BALL:
-            if (m_board.has(tx, ty)) {
+            if (m_board(tx, ty) != EMPTY) {
                 m_set_state_wait_dest(tx, ty);
             }
             break;
         case State::WAIT_DEST:
             if (tx == m_waitd_src_x && ty == m_waitd_src_y) {
                 m_reset_state_wait_ball(m_waitd_src_x, m_waitd_src_y, m_waitd_color);
+            } else if (m_board(tx, ty) != EMPTY) {
+                m_reset_state_wait_dest(tx, ty);
             } else {
                 m_set_state_move(m_waitd_src_x, m_waitd_src_y, tx, ty, m_waitd_color);
             }

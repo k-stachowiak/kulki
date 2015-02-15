@@ -8,6 +8,7 @@
 #include <random>
 #include <vector>
 #include <deque>
+#include <cmath>
 
 namespace std {
     template <> struct hash<std::pair<int, int>> {
@@ -67,7 +68,7 @@ namespace {
     const double BOARD_SHIFT_X = (SCREEN_W - (BOARD_W * FIELD_W)) / 2.0;
     const double BOARD_SHIFT_Y = (SCREEN_H - (BOARD_H * FIELD_W)) / 2.0;
 
-    const double BALL_THICK = 4;
+    const double BALL_JUMP_H = 0.333;
     const double BALL_RADIUS = 0.8 * (FIELD_W / 2.0);
     const ALLEGRO_COLOR BALL_COLORS[] = {
         al_map_rgb_f(0, 0, 0),
@@ -460,17 +461,10 @@ void draw_field(
     }
 }
 
-void draw_ball(
-        double x, double y, int color, double r,
-        bool fill, const glm::mat3& transf)
+void draw_ball(double x, double y, int color, double r, const glm::mat3& transf)
 {
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
-
-    if (fill) {
-        al_draw_filled_circle(c.x, c.y, r, BALL_COLORS[color]);
-    } else {
-        al_draw_circle(c.x, c.y, r, BALL_COLORS[color], BALL_THICK);
-    }
+    al_draw_filled_circle(c.x, c.y, r, BALL_COLORS[color]);
 }
 
 void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
@@ -483,9 +477,7 @@ void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
                 x == hlx && y == hly,
                 transf);
             if (b(x, y) != EMPTY) {
-                draw_ball(
-                    x + 0.5, y + 0.5, b(x, y), BALL_RADIUS,
-                    true, transf);
+                draw_ball(x + 0.5, y + 0.5, b(x, y), BALL_RADIUS, transf);
             }
         }
     }
@@ -522,6 +514,7 @@ class Kulki {
 
     int m_waitd_src_x, m_waitd_src_y;
     int m_waitd_color;
+    double m_waitd_time;
 
     std::deque<std::pair<int, int>> m_move_path;
     double m_move_time;
@@ -576,6 +569,7 @@ class Kulki {
         m_waitd_src_x = src_x;
         m_waitd_src_y = src_y;
         m_waitd_color = m_board(src_x, src_y);
+        m_waitd_time = 0.0;
         m_board(src_x, src_y) = EMPTY;
         m_state = State::WAIT_DEST;
     }
@@ -678,6 +672,12 @@ class Kulki {
         }
     }
 
+    void m_tick_wait_dest(double dt)
+    {
+        m_waitd_time += dt;
+        m_waitd_time = fmod(m_waitd_time, MOVE_PERIOD);
+    }
+
     void m_tick_move(double dt)
     {
         if ((m_move_time -= dt) > 0) return;
@@ -703,17 +703,31 @@ class Kulki {
     void m_draw_wait_dest()
     {
         glm::mat3 transf = m_current_transform();
-        int x = m_waitd_src_x;
-        int y = m_waitd_src_y;
-        draw_ball(x + 0.5, y + 0.5, m_waitd_color, BALL_RADIUS, false, transf);
+
+        double factor = double(m_waitd_time) / MOVE_PERIOD * 3.14;
+
+        double x = double(m_waitd_src_x) + 0.5;
+        double y = double(m_waitd_src_y) + 0.5 - sin(factor) * BALL_JUMP_H;
+
+        draw_ball(x, y, m_waitd_color, BALL_RADIUS, transf);
     }
 
     void m_draw_move()
     {
         glm::mat3 transf = m_current_transform();
-        int x = m_move_path.front().first;
-        int y = m_move_path.front().second;
-        draw_ball(x + 0.5, y + 0.5, m_move_color, BALL_RADIUS, false, transf);
+
+        double x1 = m_move_path[0].first;
+        double y1 = m_move_path[0].second;
+        double x2 = m_move_path[1].first;
+        double y2 = m_move_path[1].second;
+
+        double mv_factor = m_move_time / MOVE_PERIOD;
+        double bmp_factor = (1.0 - mv_factor) * 3.14;
+
+        double x = x1 * mv_factor + x2 * (1.0 - mv_factor) + 0.5;
+        double y = y1 * mv_factor + y2 * (1.0 - mv_factor) + 0.5 - sin(bmp_factor) * BALL_JUMP_H;
+
+        draw_ball(x, y, m_move_color, BALL_RADIUS, transf);
     }
 
     void m_draw_score()
@@ -811,6 +825,8 @@ class Kulki {
         case State::SCORE:
             m_tick_score(dt);
             break;
+        case State::WAIT_DEST:
+            m_tick_wait_dest(dt);
         default:
             break;
         }

@@ -32,7 +32,16 @@ void draw_field(
 void draw_ball(double x, double y, int color, double r, const glm::mat3& transf)
 {
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
-    al_draw_filled_circle(c.x, c.y, r, BALL_COLORS[color]);
+
+    float red, green, blue;
+    al_unmap_rgb_f(BALL_COLORS[color], &red, &green, &blue);
+
+    ALLEGRO_COLOR filtered_color = al_map_rgb_f(
+            red * BALL_COLOR_FILTER.r,
+            green * BALL_COLOR_FILTER.g,
+            blue * BALL_COLOR_FILTER.b);
+
+    al_draw_filled_circle(c.x, c.y, r, filtered_color);
 }
 
 void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
@@ -82,8 +91,8 @@ class MenuState : public KulkiState {
     bool* m_alive;
 
     const std::vector<std::string> m_entries;
-    double m_width, m_height;
     int m_current;
+    double m_width, m_height;
 
     std::pair<double, double> m_compute_dimensions()
     {
@@ -113,14 +122,13 @@ public:
         m_menu_font { menu_font },
         m_score { score },
         m_alive { alive },
-        m_entries { "New game", "Exit" }
+        m_entries { "New game", "Exit" },
+        m_current { 0 }
     {
         std::tie(m_width, m_height) = m_compute_dimensions();
     }
 
-    void reset()
-    {
-    }
+    void reset() {}
 
     void on_key(int key, bool down) override
     {
@@ -145,14 +153,6 @@ public:
         }
     }
 
-    void on_button(int button, bool down) override
-    {
-    }
-
-    void on_cursor(int x, int y) override
-    {
-    }
-
     void draw(const glm::mat3&) override
     {
         const double height = al_get_font_line_height(m_menu_font);
@@ -162,13 +162,20 @@ public:
         for (int i = 0; i < m_entries.size(); ++i) {
 
             const std::string& entry = m_entries[i];
+
+            const double x1 = x + MENU_MARGIN;
+            const double y1 = y + MENU_MARGIN;
+            const double x2 = x + m_width - MENU_MARGIN;
+            const double y2 = y + MENU_MARGIN + height + 2.0 * MENU_PADDING;
+            al_draw_filled_rectangle(x1, y1, x2, y2, MENU_BG_COLOR_L);
+            al_draw_rectangle(x1, y1, x2, y2, MENU_BG_COLOR_D, 3);
+
             const double cx = x + m_width / 2.0;
             const double cy = y + MENU_MARGIN + MENU_PADDING + height / 2.0;
             const auto color = (i == m_current) ? MENU_SELECT_COLOR : MENU_REGULAR_COLOR;
+            al_draw_textf(m_menu_font, color, cx, cy - height / 2, ALLEGRO_ALIGN_CENTRE, "%s", entry.c_str());
 
-            al_draw_textf(m_menu_font, color, cx, cy, ALLEGRO_ALIGN_CENTRE, "%s", entry.c_str());
-
-            y += height + 2.0 * MENU_PADDING;
+            y += height + 2.0 * MENU_PADDING + MENU_MARGIN;
         }
     }
 };
@@ -650,7 +657,7 @@ class Kulki {
     Board m_board;
     ALLEGRO_FONT* m_gameover_font;
     ALLEGRO_FONT* m_score_font;
-    ALLEGRO_FONT *m_menu_font;
+    ALLEGRO_FONT* m_menu_font;
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
@@ -712,7 +719,7 @@ class Kulki {
         al_clear_to_color(BG_COLOR);
 
         draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
-        al_draw_textf(m_score_font, SCORE_COLOR, 0, 0, ALLEGRO_ALIGN_LEFT, "Score : %d", m_score);
+        al_draw_textf(m_score_font, SCORE_COLOR, SCORE_SHIFT_X, SCORE_SHIFT_Y, ALLEGRO_ALIGN_LEFT, "Score : %d", m_score);
         m_state_context.m_current_state->draw(transf);
 
         al_flip_display();

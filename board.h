@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef MY_BOARD_H
 #define MY_BOARD_H
 

@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef KULKI_H
 #define KULKI_H
 

@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef CONFIG_H
 #define CONFIG_H
 

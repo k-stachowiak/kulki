@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef UTILITY_H
 #define UTILITY_H
 

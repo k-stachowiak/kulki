@@ -71,6 +71,108 @@ struct KulkiState {
     virtual void draw(const glm::mat3& transf) {}
 };
 
+class MenuState : public KulkiState {
+
+    Board* const m_board;
+    KulkiContext* const m_context;
+
+    ALLEGRO_FONT* m_menu_font;
+
+    int* m_score;
+    bool* m_alive;
+
+    const std::vector<std::string> m_entries;
+    double m_width, m_height;
+    int m_current;
+
+    std::pair<double, double> m_compute_dimensions()
+    {
+        const double height = al_get_font_line_height(m_menu_font);
+        const int n = m_entries.size();
+
+        double max_width = 0.0;
+        for (const auto& entry : m_entries) {
+            double width = al_get_text_width(m_menu_font, entry.c_str());
+            if (width > max_width) {
+                max_width = width;
+            }
+        }
+
+        return {
+            2.0 * (MENU_PADDING + MENU_MARGIN) + max_width,
+            n * (height + 2.0 * MENU_PADDING + MENU_MARGIN) + MENU_MARGIN
+        };
+    }
+
+    void m_select();
+
+public:
+    MenuState(Board* board, KulkiContext* const context, ALLEGRO_FONT* menu_font, int* score, bool* alive) :
+        m_board { board },
+        m_context { context },
+        m_menu_font { menu_font },
+        m_score { score },
+        m_alive { alive },
+        m_entries { "New game", "Exit" }
+    {
+        std::tie(m_width, m_height) = m_compute_dimensions();
+    }
+
+    void reset()
+    {
+    }
+
+    void on_key(int key, bool down) override
+    {
+        (void)m_context;
+
+        if (!down) {
+            return;
+        }
+
+        switch (key) {
+        case ALLEGRO_KEY_DOWN:
+            m_current = (m_current - 1) % m_entries.size();
+            break;
+        case ALLEGRO_KEY_UP:
+            m_current = (m_current + 1) % m_entries.size();
+            break;
+        case ALLEGRO_KEY_ENTER:
+            m_select();
+            break;
+        default:
+            break;
+        }
+    }
+
+    void on_button(int button, bool down) override
+    {
+    }
+
+    void on_cursor(int x, int y) override
+    {
+    }
+
+    void draw(const glm::mat3&) override
+    {
+        const double height = al_get_font_line_height(m_menu_font);
+        const double x = double(SCREEN_W - m_width) / 2.0;
+        double y = double(SCREEN_H - m_height) / 2.0;
+
+        for (int i = 0; i < m_entries.size(); ++i) {
+
+            const std::string& entry = m_entries[i];
+            const double cx = x + m_width / 2.0;
+            const double cy = y + MENU_MARGIN + MENU_PADDING + height / 2.0;
+            const auto color = (i == m_current) ? MENU_SELECT_COLOR : MENU_REGULAR_COLOR;
+
+            al_draw_textf(m_menu_font, color, cx, cy, ALLEGRO_ALIGN_CENTRE, "%s", entry.c_str());
+
+            y += height + 2.0 * MENU_PADDING;
+        }
+    }
+};
+
 class DealState : public KulkiState {
 
     std::random_device m_rdev;
@@ -326,8 +428,10 @@ public:
 struct KulkiContext {
 
     Board* m_board;
-    int *m_score;
+    int* m_score;
+    bool* m_alive;
 
+    MenuState m_menu_state;
     DealState m_deal_state;
     WaitBallState m_wait_ball_state;
     WaitDestState m_wait_dest_state;
@@ -340,11 +444,14 @@ struct KulkiContext {
     KulkiContext(
             Board* board,
             int* score,
+            bool* alive,
             std::pair<int, int>* cursor_tile,
             ALLEGRO_FONT* score_font,
-            ALLEGRO_FONT* gameover_font) :
+            ALLEGRO_FONT* gameover_font,
+            ALLEGRO_FONT* menu_font) :
         m_board { board },
         m_score { score },
+        m_menu_state { board, this, menu_font, score, alive },
         m_deal_state { board, this },
         m_wait_ball_state { board, this, cursor_tile },
         m_wait_dest_state { board, this, cursor_tile },
@@ -353,6 +460,12 @@ struct KulkiContext {
         m_gameover_state { board, this, gameover_font },
         m_current_state { nullptr }
     {}
+    
+    void set_state_menu()
+    {
+        m_menu_state.reset();
+        m_current_state = &m_menu_state;
+    }
 
     void set_state_wait_ball()
     {
@@ -450,6 +563,24 @@ struct KulkiContext {
     }
 };
 
+void MenuState::m_select()
+{
+    const std::string& entry = m_entries[m_current];
+
+    if (entry == "New game") {
+        m_board->clear();
+        *m_score = 0;
+        m_context->set_state_deal(DEAL_COUNT_INIT);
+
+    } else if (entry == "Exit") {
+        *m_alive = false;
+
+    } else {
+        throw std::runtime_error("Incogerent menu configuration");
+
+    }
+}
+
 void DealState::tick(double dt)
 {
     if ((m_time -= dt) > 0) return;
@@ -510,55 +641,22 @@ void ScoreState::tick(double dt)
 
 void GameoverState::on_key(int key, bool down)
 {
-    m_board->clear();
-    *m_score = 0;
-    m_context->set_state_deal(DEAL_COUNT_INIT);
+    m_context->set_state_menu();
 }
 
 class Kulki {
-
-    enum class State {
-        DEAL,
-        WAIT_BALL,
-        WAIT_DEST,
-        MOVE,
-        GAMEOVER,
-        SCORE
-    };
-
-    std::random_device m_rdev;
-    std::default_random_engine m_reng;
 
     bool m_alive;
     Board m_board;
     ALLEGRO_FONT* m_gameover_font;
     ALLEGRO_FONT* m_score_font;
+    ALLEGRO_FONT *m_menu_font;
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
     int m_score;
 
-    State m_state;
-
-    int m_deal_count;
-    double m_deal_time;
-    std::vector<std::pair<int, int>> m_deal_positions;
-
-    int m_waitd_src_x, m_waitd_src_y;
-    int m_waitd_color;
-    double m_waitd_time;
-
-    std::deque<std::pair<int, int>> m_move_path;
-    double m_move_time;
-    int m_move_dst_x, m_move_dst_y;
-    int m_move_color;
-
-    double m_score_time;
-    double m_score_cx, m_score_cy;
-    int m_score_incr;
-
-    double m_gameover_time;
-    int m_gameover_index;
+    KulkiContext m_state_context;
 
     Kulki(const Kulki&);    // Not copyable ...
     Kulki(Kulki&&);         // ... or moveable.
@@ -571,280 +669,20 @@ class Kulki {
         return scale(FIELD_W) * translate(BOARD_SHIFT_X, BOARD_SHIFT_Y); 
     }
 
-    void m_new_ball(Board& b, int& x, int& y, int& color)
-    {
-        std::uniform_int_distribution<int> distr_x(0, b.m_width - 1);
-        std::uniform_int_distribution<int> distr_y(0, b.m_height - 1);
-        std::uniform_int_distribution<int> distr_color(0, BALL_COLORS.size() - 1);
-
-        do {
-            x = distr_x(m_reng);
-            y = distr_y(m_reng);
-        } while (b(x, y) != EMPTY);
-
-        color = distr_color(m_reng);
-    }
-
-    // State transitions.
-    // ------------------
-
-    void m_set_state_wait_ball()
-    {
-        m_state = State::WAIT_BALL;
-    }
-
-    void m_reset_state_wait_ball(int src_x, int src_y, int color)
-    {
-        m_board(src_x, src_y) = color;
-        m_set_state_wait_ball();
-    }
-
-    void m_set_state_wait_dest(int src_x, int src_y)
-    {
-        m_waitd_src_x = src_x;
-        m_waitd_src_y = src_y;
-        m_waitd_color = m_board(src_x, src_y);
-        m_waitd_time = 0.0;
-        m_board(src_x, src_y) = EMPTY;
-        m_state = State::WAIT_DEST;
-    }
-
-    void m_reset_state_wait_dest(int src_x, int src_y)
-    {
-        m_board(m_waitd_src_x, m_waitd_src_y) = m_waitd_color;
-        m_set_state_wait_dest(src_x, src_y);
-    }
-
-    void m_set_state_deal(int count)
-    {
-        if (m_board.free_fields() <= count) {
-            m_set_state_gameover();
-            return;
-        }
-
-        m_deal_count = count;
-        m_deal_time = DEAL_PERIOD;
-        m_deal_positions.clear();
-        m_state = State::DEAL;
-    }
-
-    void m_set_state_gameover()
-    {
-        m_gameover_time = GAMEOVER_PERIOD;
-        m_gameover_index = 0;
-        m_state = State::GAMEOVER;
-    }
-
-    void m_set_state_score(const std::vector<std::pair<int, int>>& changes, State next_state)
-    {
-        std::unordered_set<std::pair<int, int>> streaks;
-        bool success = false;
-
-        for (const auto& p : changes) {
-            success |= m_board.find_streak(p, std::inserter(streaks, begin(streaks)));
-        }
-
-        if (!success) {
-            switch (next_state) {
-            case State::DEAL:
-                m_set_state_deal(DEAL_COUNT_INGAME);
-                return;
-            case State::WAIT_BALL:
-                m_set_state_wait_ball();
-                return;
-            default:
-                throw std::domain_error("m_set_state_score: bad next_state argument");
-            }
-        }
-
-        int score_incr = 0;
-        int x_sum = 0, y_sum = 0;
-        for (const auto& p : streaks) {
-            m_board(p.first, p.second) = EMPTY;
-            ++score_incr;
-            x_sum += p.first;
-            y_sum += p.second;
-        }
-        m_score += score_incr;
-
-        m_score_time = SCORE_PERIOD;
-        m_score_cx = double(x_sum) / double(streaks.size()) + 0.5;
-        m_score_cy = double(y_sum) / double(streaks.size()) + 0.5;
-        m_score_incr = score_incr;
-        m_state = State::SCORE;
-    }
-
-    void m_set_state_move(int src_x, int src_y, int dst_x, int dst_y, int color)
-    {
-        std::deque<std::pair<int, int>> path;
-
-        if (!m_board.find_path({ src_x, src_y }, { dst_x, dst_y }, path)) {
-            m_reset_state_wait_ball(src_x, src_y, color);
-            return;
-        }
-
-        m_move_path = std::move(path);
-        m_move_time = MOVE_PERIOD;
-        m_move_dst_x = dst_x;
-        m_move_dst_y = dst_y;
-        m_move_color = color;
-        m_state = State::MOVE;
-    }
-
-    // Tick implementations.
-    // ---------------------
-
-    void m_tick_deal(double dt)
-    {
-        if ((m_deal_time -= dt) > 0) return;
-        else m_deal_time = DEAL_PERIOD;
-
-        int x, y, color;
-        m_new_ball(m_board, x, y, color);
-        m_board(x, y) = color;
-        m_deal_positions.emplace_back(x, y);
-
-        if ((--m_deal_count) == 0) {
-            m_set_state_score(m_deal_positions, State::WAIT_BALL);
-        }
-    }
-
-    void m_tick_wait_dest(double dt)
-    {
-        m_waitd_time += dt;
-        m_waitd_time = fmod(m_waitd_time, MOVE_PERIOD);
-    }
-
-    void m_tick_gameover(double dt)
-    {
-        if ((m_gameover_time -= dt) > 0) {
-            return;
-        }
-
-        m_gameover_time = GAMEOVER_PERIOD;
-        m_gameover_index = (m_gameover_index + 1) % BALL_COLORS.size();
-    }
-
-    void m_tick_move(double dt)
-    {
-        if ((m_move_time -= dt) > 0) return;
-        else m_move_time = MOVE_PERIOD;
-
-        m_move_path.pop_front();
-
-        if (m_move_path.size() == 1) {
-            m_board(m_move_dst_x, m_move_dst_y) = m_move_color;
-            m_set_state_score({ { m_move_dst_x, m_move_dst_y } }, State::DEAL);
-        }
-    }
-
-    void m_tick_score(double dt)
-    {
-        if ((m_score_time -= dt) > 0) return;
-        m_set_state_wait_ball();
-    }
-
-    // Draw implementations.
-    // ---------------------
-
-    void m_draw_wait_dest()
-    {
-        glm::mat3 transf = m_current_transform();
-
-        double factor = double(m_waitd_time) / MOVE_PERIOD * 3.14;
-
-        double x = double(m_waitd_src_x) + 0.5;
-        double y = double(m_waitd_src_y) + 0.5 - sin(factor) * BALL_JUMP_H;
-
-        draw_ball(x, y, m_waitd_color, BALL_RADIUS, transf);
-    }
-
-    void m_draw_move()
-    {
-        glm::mat3 transf = m_current_transform();
-
-        double x1 = m_move_path[0].first;
-        double y1 = m_move_path[0].second;
-        double x2 = m_move_path[1].first;
-        double y2 = m_move_path[1].second;
-
-        double mv_factor = m_move_time / MOVE_PERIOD;
-        double bmp_factor = (1.0 - mv_factor) * 3.14;
-
-        double x = x1 * mv_factor + x2 * (1.0 - mv_factor) + 0.5;
-        double y = y1 * mv_factor + y2 * (1.0 - mv_factor) + 0.5 - sin(bmp_factor) * BALL_JUMP_H;
-
-        draw_ball(x, y, m_move_color, BALL_RADIUS, transf);
-    }
-
-    void m_draw_score()
-    {
-        glm::vec3 text_center = glm::vec3 { m_score_cx, m_score_cy, 1 } * m_current_transform();
-        al_draw_textf(
-            m_score_font, SCORE_COLOR,
-            text_center.x, text_center.y,
-            ALLEGRO_ALIGN_CENTRE,
-            "+%d", m_score_incr);
-    }
-
-    void m_draw_gameover()
-    {
-        al_draw_text(
-            m_gameover_font, BALL_COLORS[m_gameover_index],
-            GAMEOVER_SHIFT_X, GAMEOVER_SHIFT_Y,
-            ALLEGRO_ALIGN_CENTRE,
-            "Game Over");
-    }
-
-    // Common implementations.
-    // -----------------------
-
     void m_on_key(int key, bool down)
     {
         if (key == ALLEGRO_KEY_ESCAPE && down) {
-            m_alive = false;
+            m_state_context.set_state_menu();
             return;
         }
 
-        switch (m_state) {
-        case State::GAMEOVER:
-            m_board.clear();
-            m_score = 0;
-            m_set_state_deal(DEAL_COUNT_INIT);
-            break;
-        default:
-            break;
-        }
+        m_state_context.m_current_state->on_key(key, down);
     }
 
     void m_on_button(int button, bool down)
     {
         if (!down) return;
-
-        int tx = m_cursor_tile.first;
-        int ty = m_cursor_tile.second;
-        if (!m_board.has(tx, ty)) {
-            return;
-        }
-
-        switch (m_state) {
-        case State::WAIT_BALL:
-            if (m_board(tx, ty) != EMPTY) {
-                m_set_state_wait_dest(tx, ty);
-            }
-            break;
-        case State::WAIT_DEST:
-            if (tx == m_waitd_src_x && ty == m_waitd_src_y) {
-                m_reset_state_wait_ball(m_waitd_src_x, m_waitd_src_y, m_waitd_color);
-            } else if (m_board(tx, ty) != EMPTY) {
-                m_reset_state_wait_dest(tx, ty);
-            } else {
-                m_set_state_move(m_waitd_src_x, m_waitd_src_y, tx, ty, m_waitd_color);
-            }
-            break;
-        default:
-            break;
-        }
+        else m_state_context.m_current_state->on_button(button, down);
     }
 
     void m_on_cursor(int x, int y)
@@ -858,29 +696,13 @@ class Kulki {
 
         m_cursor_tile.first = tile_pos.x;
         m_cursor_tile.second = tile_pos.y;
+
+        m_state_context.m_current_state->on_cursor(x, y);
     }
 
     void m_tick(double dt)
     {
-        switch (m_state) {
-        case State::DEAL:
-            m_tick_deal(dt);
-            break;
-        case State::MOVE:
-            m_tick_move(dt);
-            break;
-        case State::SCORE:
-            m_tick_score(dt);
-            break;
-        case State::WAIT_DEST:
-            m_tick_wait_dest(dt);
-            break;
-        case State::GAMEOVER:
-            m_tick_gameover(dt);
-            break;
-        default:
-            break;
-        }
+        m_state_context.m_current_state->tick(dt);
     }
 
     void m_draw(double)
@@ -890,52 +712,32 @@ class Kulki {
         al_clear_to_color(BG_COLOR);
 
         draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
-
-        al_draw_textf(
-            m_score_font, SCORE_COLOR,
-            0, 0,
-            ALLEGRO_ALIGN_LEFT,
-            "Score : %d", m_score);
-
-        switch (m_state)
-        {
-        case State::WAIT_DEST:
-            m_draw_wait_dest();
-            break;
-        case State::MOVE:
-            m_draw_move();
-            break;
-        case State::SCORE:
-            m_draw_score();
-            break;
-        case State::GAMEOVER:
-            m_draw_gameover();
-            break;
-        default:
-            break;
-        }
+        al_draw_textf(m_score_font, SCORE_COLOR, 0, 0, ALLEGRO_ALIGN_LEFT, "Score : %d", m_score);
+        m_state_context.m_current_state->draw(transf);
 
         al_flip_display();
     }
 
 public:
     Kulki() :
-        m_reng { m_rdev() },
         m_alive { true },
         m_board { BOARD_W, BOARD_H },
         m_gameover_font { al_load_font("prstartk.ttf", -GAMEOVER_FONT_SIZE, 0) },
         m_score_font { al_load_font("prstartk.ttf", -SCORE_FONT_SIZE, 0) },
+        m_menu_font { al_load_font("prstartk.ttf", -MENU_FONT_SIZE, 0) },
         m_cursor_screen { -1, -1 },
         m_cursor_tile { -1, -1 },
-        m_score { 0 }
+        m_score { 0 },
+        m_state_context { &m_board, &m_score, &m_alive, &m_cursor_tile, m_score_font, m_gameover_font, m_menu_font }
     {
-        m_set_state_deal(DEAL_COUNT_INIT);
+        m_state_context.set_state_menu();
     }
 
     ~Kulki()
     {
         al_destroy_font(m_gameover_font);
         al_destroy_font(m_score_font);
+        al_destroy_font(m_menu_font);
     }
 
     void run(Allegro& al)

@@ -22,8 +22,8 @@ namespace {
     const double FIELD_THICK = 2;
     const double FIELD_MARGIN = 0.025;
 
-    const int BOARD_W = 3;
-    const int BOARD_H = 5;
+    const int BOARD_W = 9;
+    const int BOARD_H = 9;
     const double BOARD_SHIFT_X = (SCREEN_W - (BOARD_W * FIELD_W)) / 2.0;
     const double BOARD_SHIFT_Y = (SCREEN_H - (BOARD_H * FIELD_W)) / 2.0;
 
@@ -55,6 +55,12 @@ namespace {
     const int GAMEOVER_SHIFT_X = SCREEN_W / 2, GAMEOVER_SHIFT_Y = SCREEN_H / 2;
     const int GAMEOVER_FONT_SIZE = 64;
     const double GAMEOVER_PERIOD = 0.125;
+
+    const double MENU_PADDING = 10.0;
+    const double MENU_MARGIN = 20.0;
+    const int MENU_FONT_SIZE = 32;
+    const ALLEGRO_COLOR MENU_SELECT_COLOR = al_map_rgb_f(1, 1, 0);
+    const ALLEGRO_COLOR MENU_REGULAR_COLOR = al_map_rgb_f(0, 1, 0);
 }
 
 #endif

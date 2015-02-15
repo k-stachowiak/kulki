@@ -685,7 +685,7 @@ class Kulki {
 
         m_move_path.pop_front();
 
-        if (m_move_path.empty()) {
+        if (m_move_path.size() == 1) {
             m_board(m_move_dst_x, m_move_dst_y) = m_move_color;
             m_set_state_score({ { m_move_dst_x, m_move_dst_y } }, State::DEAL);
         }

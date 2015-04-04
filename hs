@@ -1,0 +1,10 @@
+CZITER#100
+MAJONEZ#100
+Ania#10
+Bartek#9
+Celinka#8
+Darek#7
+Emil#6
+Filip#5
+Grazyna#4
+Hipolit#3

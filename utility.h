@@ -14,7 +14,7 @@ namespace std {
     };
 }
 
-glm::mat3 translate(double x, double y)
+inline glm::mat3 translate(double x, double y)
 {
     return {
         1, 0, x,
@@ -23,7 +23,7 @@ glm::mat3 translate(double x, double y)
     };
 }
 
-glm::mat3 scale(double factor)
+inline glm::mat3 scale(double factor)
 {
     return {
         factor, 0, 0,

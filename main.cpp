@@ -13,6 +13,7 @@
 
 int main()
 {
+    config::load();
     Allegro al;
     (Kulki {}).run(al);
 }

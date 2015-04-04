@@ -13,6 +13,8 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_primitives.h>
 
+#include "config.h"
+
 class Allegro {
 
     const int m_screen_w, m_screen_h;
@@ -21,9 +23,6 @@ class Allegro {
 
     ALLEGRO_DISPLAY* m_display;
     ALLEGRO_EVENT_QUEUE* m_ev_queue;
-
-    Allegro(const Allegro&);    // Not copyable ...
-    Allegro(Allegro&&);         // ... or moveable.
 
     template <typename KeyEvent, typename ButtonEvent, typename CursorEvent>
     void m_process_events(
@@ -71,11 +70,11 @@ class Allegro {
     void m_realtime_loop_step(TickEvent tick, DrawEvent draw, bool& alive)
     {
         const double new_time = al_get_time();
-        
+
         double frame_time = new_time - m_current_time;
 
-        if (frame_time > MAX_FRAME_TIME) {
-            frame_time = MAX_FRAME_TIME;
+        if (frame_time > config::MAX_FRAME_TIME) {
+            frame_time = config::MAX_FRAME_TIME;
         }
 
         m_current_time = new_time;
@@ -93,8 +92,8 @@ class Allegro {
 
 public:
     Allegro() :
-        m_screen_w { SCREEN_W }, m_screen_h { SCREEN_H },
-        m_fps { FPS }, m_spf { 1.0 / m_fps },
+        m_screen_w { config::SCREEN_W }, m_screen_h { config::SCREEN_H },
+        m_fps { config::FPS }, m_spf { 1.0 / m_fps },
         m_display { nullptr }, m_ev_queue { nullptr }
     {
         if (!al_init()) {
@@ -139,10 +138,12 @@ public:
             exit(1);
         }
 
+        /*
         if(!al_install_audio()) {
             std::cerr << "Failed initializing audio." << std::endl;
             exit(1);
         }
+        */
 
         m_ev_queue = al_create_event_queue();
         if (!m_ev_queue) {
@@ -185,10 +186,10 @@ public:
             m_realtime_loop_step(tick, draw, alive);
             if (!alive) return;
 
-            al_rest(FRAME_REST);
+            al_rest(config::FRAME_REST);
         }
     }
-    
+
 };
 
 #endif

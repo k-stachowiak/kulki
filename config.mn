@@ -1,0 +1,64 @@
+# Fundamental
+(bind SCREEN_W 900)
+(bind SCREEN_H 900)
+(bind FPS 50.0)
+
+# User experience
+(bind BG_COLOR [ 0.5 0.5 0.5 ])
+
+(bind FIELD_COLOR [ 0.75 0.75 0.75 ])
+(bind FIELD_W 64.0)
+(bind FIELD_THICK 1.0)
+(bind FIELD_MARGIN 0.025)
+
+(bind BALL_JUMP_H 0.333)
+(bind BALL_RADIUS (* 0.8 (/ FIELD_W 2.0)))
+(bind BALL_COLORS [
+    [ 0.0 0.0 0.0 ]
+    [ 0.0 0.0 1.0 ]
+    [ 0.0 1.0 0.0 ]
+    [ 0.0 1.0 1.0 ]
+    [ 1.0 0.0 0.0 ]
+    [ 1.0 0.0 1.0 ]
+    [ 1.0 1.0 0.0 ]
+    [ 1.0 1.0 1.0 ] ])
+(bind BALL_COLOR_FILTER [ 0.9 0.9 0.9 ])
+(bind MOVE_PERIOD 0.25)
+
+(bind SCORE_COLOR [ 1.0 1.0 1.0 ])
+(bind SCORE_FONT_SIZE 24)
+(bind SCORE_SHIFT_X 10)
+(bind SCORE_SHIFT_Y 10)
+(bind SCORE_PERIOD 0.25)
+
+(bind GAMEOVER_SHIFT_X (/ SCREEN_W 2))
+(bind GAMEOVER_SHIFT_Y (/ SCREEN_H 2))
+(bind GAMEOVER_FONT_SIZE 64)
+(bind GAMEOVER_PERIOD 0.125)
+
+(bind DEAL_PERIOD 0.25)
+
+(bind MENU_PADDING 20.0)
+(bind MENU_MARGIN 10.0)
+(bind MENU_FONT_SIZE 30)
+
+(bind MENU_SELECT_COLOR [ 1.0 1.0 0.0 ])
+(bind MENU_REGULAR_COLOR [ 0.0 1.0 0.0 ])
+(bind MENU_BG_COLOR_L [ 0.333 0.333 0.333 ])
+(bind MENU_BG_COLOR_D [ 0.25 0.25 0.25 ])
+
+(bind HIGHSCORE_CHARACTERS 25)
+
+# Gameplay
+(bind BOARD_W 9)
+(bind BOARD_H 9)
+(bind STREAK_MIN 5)
+(bind DEAL_COUNT_INIT 7)
+(bind DEAL_COUNT_INGAME 3)
+
+# Useless detail
+(bind FRAME_REST 0.001)
+(bind MAX_FRAME_TIME 0.25)
+
+(bind BOARD_SHIFT_X (/ (- SCREEN_W (* BOARD_W FIELD_W)) 2.0))
+(bind BOARD_SHIFT_Y (/ (- SCREEN_H (* BOARD_H FIELD_W)) 2.0))

@@ -6,11 +6,13 @@
 #include <vector>
 #include <limits>
 #include <utility>
+#include <deque>
 #include <algorithm>
 #include <unordered_set>
 #include <unordered_map>
 
 #include "utility.h"
+#include "config.h"
 
 struct Board {
 
@@ -21,6 +23,7 @@ struct Board {
     Board() : m_width { 0 }, m_height { 0 } {};
     Board(const Board& x) : m_width { x.m_width }, m_height { x.m_height }, m_fields { x.m_fields } {}
     Board(Board&& x) : m_width { x.m_width }, m_height { x.m_height }, m_fields { std::move(x.m_fields) } {}
+
     Board& operator=(const Board& x)
     {
         m_width = x.m_width;
@@ -28,6 +31,7 @@ struct Board {
         m_fields = x.m_fields;
         return *this;
     }
+
     Board& operator=(Board&& x)
     {
         m_width = x.m_width;
@@ -39,7 +43,7 @@ struct Board {
     // Custom constructor:
     Board(int w, int h) :
         m_width { w }, m_height { h },
-        m_fields(w * h, EMPTY)
+        m_fields(w * h, config::EMPTY)
     {}
 
     // API:
@@ -55,7 +59,7 @@ struct Board {
 
     void clear()
     {
-        std::fill(begin(m_fields), end(m_fields), EMPTY);
+        std::fill(begin(m_fields), end(m_fields), config::EMPTY);
     }
 
     bool has(int x, int y) const
@@ -65,7 +69,7 @@ struct Board {
 
     int free_fields()
     {
-        return std::count(begin(m_fields), end(m_fields), EMPTY);
+        return std::count(begin(m_fields), end(m_fields), config::EMPTY);
     }
 
     std::vector<std::pair<int, int>> m_find_streak_part(const std::pair<int, int>& src, int dx, int dy)
@@ -105,7 +109,7 @@ struct Board {
 
         for (const auto& dir : directions) {
             auto s = m_find_streak_part(src, dir.first, dir.second);
-            if (s.size() >= STREAK_MIN) {
+            if (static_cast<int>(s.size()) >= config::STREAK_MIN) {
                 std::copy(begin(s), end(s), out);
                 ++inserts;
             }
@@ -150,7 +154,7 @@ struct Board {
 
             int new_dist = dists[u] + 1;
             for (const auto& v : neighbors) {
-                if ((*this)(v.first, v.second) != EMPTY) {
+                if ((*this)(v.first, v.second) != config::EMPTY) {
                     continue;
                 }
                 if (new_dist < dists[v]) {

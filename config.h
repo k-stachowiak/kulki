@@ -7,68 +7,66 @@
 #include <allegro5/allegro.h>
 #include <glm/glm.hpp>
 
-namespace {
-    const int SCREEN_W = 800;
-    const int SCREEN_H = 800;
-    const double FPS = 50.0;
+namespace config {
 
-    const double FRAME_REST = 0.001;
-    const double MAX_FRAME_TIME = 0.25;
+extern int SCREEN_W;
+extern int SCREEN_H;
+extern double FPS;
 
-    const ALLEGRO_COLOR BG_COLOR = al_map_rgb_f(0.5, 0.5, 0.5);
+extern double FRAME_REST;
+extern double MAX_FRAME_TIME;
 
-    const int EMPTY = -1;
+extern ALLEGRO_COLOR BG_COLOR;
 
-    const ALLEGRO_COLOR FIELD_COLOR = al_map_rgb_f(0.75, 0.75, 0.75);
-    const double FIELD_W = 64;
-    const double FIELD_THICK = 1;
-    const double FIELD_MARGIN = 0.025;
+extern const int EMPTY;
 
-    const int BOARD_W = 9;
-    const int BOARD_H = 9;
-    const double BOARD_SHIFT_X = (SCREEN_W - (BOARD_W * FIELD_W)) / 2.0;
-    const double BOARD_SHIFT_Y = (SCREEN_H - (BOARD_H * FIELD_W)) / 2.0;
+extern ALLEGRO_COLOR FIELD_COLOR;
+extern double FIELD_W;
+extern double FIELD_THICK;
+extern double FIELD_MARGIN;
 
-    const double BALL_JUMP_H = 0.333;
-    const double BALL_RADIUS = 0.8 * (FIELD_W / 2.0);
-    const std::vector<ALLEGRO_COLOR> BALL_COLORS {
-        al_map_rgb_f(0, 0, 0),
-        al_map_rgb_f(0, 0, 1),
-        al_map_rgb_f(0, 1, 0),
-        al_map_rgb_f(0, 1, 1),
-        al_map_rgb_f(1, 0, 0),
-        al_map_rgb_f(1, 0, 1),
-        al_map_rgb_f(1, 1, 0),
-        al_map_rgb_f(1, 1, 1)
-    };
+extern int BOARD_W;
+extern int BOARD_H;
+extern double BOARD_SHIFT_X;
+extern double BOARD_SHIFT_Y;
 
-    const glm::vec3 BALL_COLOR_FILTER { 0.9, 0.9, 0.9 };
+extern double BALL_JUMP_H;
+extern double BALL_RADIUS;
+extern std::vector<ALLEGRO_COLOR> BALL_COLORS;
 
-    const ALLEGRO_COLOR SCORE_COLOR = al_map_rgb_f(1, 1, 1);
-    const int SCORE_FONT_SIZE = 24;
-    const int SCORE_SHIFT_X = 10;
-    const int SCORE_SHIFT_Y = 10;
+extern glm::vec3 BALL_COLOR_FILTER;
 
-    const int STREAK_MIN = 5;
+extern ALLEGRO_COLOR SCORE_COLOR;
+extern int SCORE_FONT_SIZE;
+extern int SCORE_SHIFT_X;
+extern int SCORE_SHIFT_Y;
 
-    const double DEAL_PERIOD = 0.25;
-    const int DEAL_COUNT_INIT = 7, DEAL_COUNT_INGAME = 3;
+extern int STREAK_MIN;
 
-    const double MOVE_PERIOD = 0.25;
+extern double DEAL_PERIOD;
+extern int DEAL_COUNT_INIT;
+extern int DEAL_COUNT_INGAME;
 
-    const double SCORE_PERIOD = 1.0;
+extern double MOVE_PERIOD;
+extern double SCORE_PERIOD;
 
-    const int GAMEOVER_SHIFT_X = SCREEN_W / 2, GAMEOVER_SHIFT_Y = SCREEN_H / 2;
-    const int GAMEOVER_FONT_SIZE = 64;
-    const double GAMEOVER_PERIOD = 0.125;
+extern int GAMEOVER_SHIFT_X;
+extern int GAMEOVER_SHIFT_Y;
+extern int GAMEOVER_FONT_SIZE;
+extern double GAMEOVER_PERIOD;
 
-    const double MENU_PADDING = 20.0;
-    const double MENU_MARGIN = 10.0;
-    const int MENU_FONT_SIZE = 30;
-    const ALLEGRO_COLOR MENU_SELECT_COLOR = al_map_rgb_f(1, 1, 0);
-    const ALLEGRO_COLOR MENU_REGULAR_COLOR = al_map_rgb_f(0, 1, 0);
-    const ALLEGRO_COLOR MENU_BG_COLOR_L = al_map_rgb_f(0.333, 0.333, 0.333);
-    const ALLEGRO_COLOR MENU_BG_COLOR_D = al_map_rgb_f(0.25, 0.25, 0.25);
+extern double MENU_PADDING;
+extern double MENU_MARGIN;
+extern int MENU_FONT_SIZE;
+extern ALLEGRO_COLOR MENU_SELECT_COLOR;
+extern ALLEGRO_COLOR MENU_REGULAR_COLOR;
+extern ALLEGRO_COLOR MENU_BG_COLOR_L;
+extern ALLEGRO_COLOR MENU_BG_COLOR_D;
+
+extern int HIGHSCORE_CHARACTERS;
+
+void load();
+
 }
 
 #endif

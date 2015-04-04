@@ -14,6 +14,7 @@
 
 #include "board.h"
 #include "allegro.h"
+#include "kulki_states.h"
 
 void draw_field(
         const glm::vec3& top_left, const glm::vec3& bot_right,
@@ -25,9 +26,9 @@ void draw_field(
     double x2 = out_bot_right.x, y2 = out_bot_right.y;
 
     if (fill) {
-        al_draw_filled_rectangle(x1, y1, x2, y2, FIELD_COLOR);
+        al_draw_filled_rectangle(x1, y1, x2, y2, config::FIELD_COLOR);
     } else {
-        al_draw_rectangle(x1, y1, x2, y2, FIELD_COLOR, FIELD_THICK);
+        al_draw_rectangle(x1, y1, x2, y2, config::FIELD_COLOR, config::FIELD_THICK);
     }
 }
 
@@ -36,12 +37,12 @@ void draw_ball(double x, double y, int color, double r, const glm::mat3& transf)
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
 
     float red, green, blue;
-    al_unmap_rgb_f(BALL_COLORS[color], &red, &green, &blue);
+    al_unmap_rgb_f(config::BALL_COLORS[color], &red, &green, &blue);
 
     ALLEGRO_COLOR filtered_color = al_map_rgb_f(
-            red * BALL_COLOR_FILTER.r,
-            green * BALL_COLOR_FILTER.g,
-            blue * BALL_COLOR_FILTER.b);
+            red * config::BALL_COLOR_FILTER.r,
+            green * config::BALL_COLOR_FILTER.g,
+            blue * config::BALL_COLOR_FILTER.b);
 
     al_draw_filled_circle(c.x, c.y, r, filtered_color);
 }
@@ -51,606 +52,15 @@ void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
     for (int x = 0; x < b.m_width; ++x) {
         for (int y = 0; y < b.m_height; ++y) {
             draw_field(
-                glm::vec3 { x + FIELD_MARGIN, y + FIELD_MARGIN, 1.0 },
-                glm::vec3 { x + 1.0 - FIELD_MARGIN, y + 1.0 - FIELD_MARGIN, 1.0 },
+                glm::vec3 { x + config::FIELD_MARGIN, y + config::FIELD_MARGIN, 1.0 },
+                glm::vec3 { x + 1.0 - config::FIELD_MARGIN, y + 1.0 - config::FIELD_MARGIN, 1.0 },
                 x == hlx && y == hly,
                 transf);
-            if (b(x, y) != EMPTY) {
-                draw_ball(x + 0.5, y + 0.5, b(x, y), BALL_RADIUS, transf);
+            if (b(x, y) != config::EMPTY) {
+                draw_ball(x + 0.5, y + 0.5, b(x, y), config::BALL_RADIUS, transf);
             }
         }
     }
-}
-
-struct KulkiContext;
-
-struct KulkiState {
-
-    enum class Enum {
-        DEAL,
-        WAIT_BALL,
-        WAIT_DEST,
-        MOVE,
-        GAMEOVER,
-        SCORE
-    };
-
-    virtual void on_key(int key, bool down) {}
-    virtual void on_button(int button, bool down) {}
-    virtual void on_cursor(int x, int y) {}
-    virtual void tick(double dt) {}
-    virtual void draw(const glm::mat3& transf) {}
-};
-
-class MenuState : public KulkiState {
-
-    Board* const m_board;
-    KulkiContext* const m_context;
-
-    ALLEGRO_FONT* m_menu_font;
-
-    int* m_score;
-    bool* m_alive;
-
-    const std::vector<std::string> m_entries;
-    int m_current;
-    double m_width, m_height;
-
-    std::pair<double, double> m_compute_dimensions()
-    {
-        const double height = al_get_font_line_height(m_menu_font);
-        const int n = m_entries.size();
-
-        double max_width = 0.0;
-        for (const auto& entry : m_entries) {
-            double width = al_get_text_width(m_menu_font, entry.c_str());
-            if (width > max_width) {
-                max_width = width;
-            }
-        }
-
-        return {
-            2.0 * (MENU_PADDING + MENU_MARGIN) + max_width,
-            n * (height + 2.0 * MENU_PADDING + MENU_MARGIN) + MENU_MARGIN
-        };
-    }
-
-    void m_select();
-
-public:
-    MenuState(Board* board, KulkiContext* const context, ALLEGRO_FONT* menu_font, int* score, bool* alive) :
-        m_board { board },
-        m_context { context },
-        m_menu_font { menu_font },
-        m_score { score },
-        m_alive { alive },
-        m_entries { "New game", "Exit" },
-        m_current { 0 }
-    {
-        std::tie(m_width, m_height) = m_compute_dimensions();
-    }
-
-    void reset() {}
-
-    void on_key(int key, bool down) override
-    {
-        (void)m_context;
-
-        if (!down) {
-            return;
-        }
-
-        switch (key) {
-        case ALLEGRO_KEY_DOWN:
-            m_current = (m_current - 1) % m_entries.size();
-            break;
-        case ALLEGRO_KEY_UP:
-            m_current = (m_current + 1) % m_entries.size();
-            break;
-        case ALLEGRO_KEY_ENTER:
-            m_select();
-            break;
-        default:
-            break;
-        }
-    }
-
-    void draw(const glm::mat3&) override
-    {
-        const double height = al_get_font_line_height(m_menu_font);
-        const double x = double(SCREEN_W - m_width) / 2.0;
-        double y = double(SCREEN_H - m_height) / 2.0;
-
-        for (int i = 0; i < m_entries.size(); ++i) {
-
-            const std::string& entry = m_entries[i];
-
-            const double x1 = x + MENU_MARGIN;
-            const double y1 = y + MENU_MARGIN;
-            const double x2 = x + m_width - MENU_MARGIN;
-            const double y2 = y + MENU_MARGIN + height + 2.0 * MENU_PADDING;
-            al_draw_filled_rectangle(x1, y1, x2, y2, MENU_BG_COLOR_L);
-            al_draw_rectangle(x1, y1, x2, y2, MENU_BG_COLOR_D, 3);
-
-            const double cx = x + m_width / 2.0;
-            const double cy = y + MENU_MARGIN + MENU_PADDING + height / 2.0;
-            const auto color = (i == m_current) ? MENU_SELECT_COLOR : MENU_REGULAR_COLOR;
-            al_draw_textf(m_menu_font, color, cx, cy - height / 2, ALLEGRO_ALIGN_CENTRE, "%s", entry.c_str());
-
-            y += height + 2.0 * MENU_PADDING + MENU_MARGIN;
-        }
-    }
-};
-
-class DealState : public KulkiState {
-
-    std::random_device m_rdev;
-    std::default_random_engine m_reng;
-
-    Board* const m_board;
-    KulkiContext* const m_context;
-
-    double m_time;
-    int m_count;
-    std::vector<std::pair<int, int>> m_positions;
-
-    DealState(const DealState&);
-    DealState(DealState&&);
-
-    void m_new_ball(Board& b, int& x, int& y, int& color)
-    {
-        std::uniform_int_distribution<int> distr_x(0, b.m_width - 1);
-        std::uniform_int_distribution<int> distr_y(0, b.m_height - 1);
-        std::uniform_int_distribution<int> distr_color(0, BALL_COLORS.size() - 1);
-
-        do {
-            x = distr_x(m_reng);
-            y = distr_y(m_reng);
-        } while (b(x, y) != EMPTY);
-
-        color = distr_color(m_reng);
-    }
-
-public:
-    DealState(Board* board, KulkiContext* context) :
-        m_reng { m_rdev() },
-        m_board { board },
-        m_context { context }
-    {}
-
-    void reset(double time, int count)
-    {
-        m_time = time;
-        m_count = count;
-        m_positions.clear();
-    }
-
-    void tick(double dt) override;
-};
-
-class WaitBallState : public KulkiState {
-    Board* const m_board;
-    KulkiContext* const m_context;
-
-    std::pair<int, int>* m_cursor_tile;
-
-    WaitBallState(const WaitBallState&);
-    WaitBallState(WaitBallState&&);
-
-public:
-    WaitBallState(Board* board, KulkiContext* context, std::pair<int, int> *cursor_tile) :
-        m_board { board },
-        m_context { context },
-        m_cursor_tile { cursor_tile }
-    {}
-
-    void on_button(int button, bool down) override;
-};
-
-class WaitDestState : public KulkiState {
-    Board* const m_board;
-    KulkiContext* const m_context;
-
-    std::pair<int, int>* m_cursor_tile;
-
-    int m_src_x, m_src_y;
-    int m_color;
-    double m_time;
-
-    WaitDestState(const WaitDestState&);
-    WaitDestState(WaitDestState&&);
-
-public:
-    WaitDestState(Board* board, KulkiContext* context, std::pair<int, int>* cursor_tile) :
-        m_board { board },
-        m_context { context },
-        m_cursor_tile { cursor_tile }
-    {}
-
-    void reset(int src_x, int src_y, int color, double time)
-    {
-        m_src_x = src_x;
-        m_src_y = src_y;
-        m_color = color;
-        m_time = time;
-    }
-
-    int get_src_x() const { return m_src_x; }
-    int get_src_y() const { return m_src_y; }
-    int get_color() const { return m_color; }
-
-    void tick(double dt) override
-    {
-        m_time += dt;
-        m_time = fmod(m_time, MOVE_PERIOD);
-    }
-
-    void draw(const glm::mat3& transf) override
-    {
-        double factor = double(m_time) / MOVE_PERIOD * 3.14;
-        double x = double(m_src_x) + 0.5;
-        double y = double(m_src_y) + 0.5 - sin(factor) * BALL_JUMP_H;
-        draw_ball(x, y, m_color, BALL_RADIUS, transf);
-    }
-
-    void on_button(int button, bool down) override;
-};
-
-class MoveState : public KulkiState {
-
-    Board* const m_board;
-    KulkiContext* const m_context;
-
-    std::deque<std::pair<int, int>> m_path;
-    double m_time;
-    int m_dst_x, m_dst_y;
-    int m_color;
-
-    MoveState(const MoveState&);
-    MoveState(MoveState&&);
-
-public:
-    MoveState(Board* board, KulkiContext* context) :
-        m_board { board },
-        m_context { context }
-    {}
-
-    void reset(std::deque<std::pair<int, int>> path, double time, int dst_x, int dst_y, int color)
-    {
-        m_path = std::move(path);
-        m_time = time;
-        m_dst_x = dst_x;
-        m_dst_y = dst_y;
-        m_color = color;
-    }
-
-    void tick(double dt) override;
-
-    void draw(const glm::mat3& transf) override
-    {
-        double x1 = m_path[0].first;
-        double y1 = m_path[0].second;
-        double x2 = m_path[1].first;
-        double y2 = m_path[1].second;
-
-        double mv_factor = m_time / MOVE_PERIOD;
-        double bmp_factor = (1.0 - mv_factor) * 3.14;
-
-        double x = x1 * mv_factor + x2 * (1.0 - mv_factor) + 0.5;
-        double y = y1 * mv_factor + y2 * (1.0 - mv_factor) + 0.5 - sin(bmp_factor) * BALL_JUMP_H;
-
-        draw_ball(x, y, m_color, BALL_RADIUS, transf);
-    }
-};
-
-class ScoreState : public KulkiState {
-
-    Board* const m_board;
-    KulkiContext* const m_context;
-    ALLEGRO_FONT* m_score_font;
-
-    double m_time;
-    double m_cx, m_cy;
-    int m_incr;
-
-    ScoreState(const ScoreState&);
-    ScoreState(ScoreState&&);
-
-public:
-    ScoreState(Board* board, KulkiContext* context, ALLEGRO_FONT* score_font) :
-        m_board { board },
-        m_context { context },
-        m_score_font { score_font }
-    {}
-
-    void reset(double time, double cx, double cy, int incr)
-    {
-        m_time = time;
-        m_cx = cx;
-        m_cy = cy;
-        m_incr = incr;
-    }
-
-    void tick(double dt) override;
-
-    void draw(const glm::mat3& transf) override
-    {
-        glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * transf;
-        al_draw_textf(
-            m_score_font, SCORE_COLOR,
-            text_center.x, text_center.y,
-            ALLEGRO_ALIGN_CENTRE,
-            "+%d", m_incr);
-    }
-};
-
-class GameoverState : public KulkiState {
-
-    Board* const m_board;
-    KulkiContext* const m_context;
-    ALLEGRO_FONT* m_gameover_font;
-
-    int* m_score;
-
-    double m_time;
-    int m_index;
-
-    GameoverState(const GameoverState&);
-    GameoverState(GameoverState&&);
-
-public:
-    GameoverState(Board* board, KulkiContext* context, ALLEGRO_FONT* gameover_font) :
-        m_board { board },
-        m_context { context },
-        m_gameover_font { gameover_font }
-    {}
-
-    void reset(int *score, double time, int index)
-    {
-        m_score = score;
-        m_time = time;
-        m_index = index;
-    }
-
-    void tick(double dt) override
-    {
-        if ((m_time -= dt) > 0) {
-            return;
-        }
-
-        m_time = GAMEOVER_PERIOD;
-        m_index = (m_index + 1) % BALL_COLORS.size();
-    }
-
-    void draw(const glm::mat3& transf) override
-    {
-        al_draw_text(
-            m_gameover_font, BALL_COLORS[m_index],
-            GAMEOVER_SHIFT_X, GAMEOVER_SHIFT_Y,
-            ALLEGRO_ALIGN_CENTRE,
-            "Game Over");
-    }
-
-    void on_key(int key, bool down) override;
-};
-
-struct KulkiContext {
-
-    Board* m_board;
-    int* m_score;
-    bool* m_alive;
-
-    MenuState m_menu_state;
-    DealState m_deal_state;
-    WaitBallState m_wait_ball_state;
-    WaitDestState m_wait_dest_state;
-    MoveState m_move_state;
-    ScoreState m_score_state;
-    GameoverState m_gameover_state;
-
-    KulkiState *m_current_state;
-
-    KulkiContext(
-            Board* board,
-            int* score,
-            bool* alive,
-            std::pair<int, int>* cursor_tile,
-            ALLEGRO_FONT* score_font,
-            ALLEGRO_FONT* gameover_font,
-            ALLEGRO_FONT* menu_font) :
-        m_board { board },
-        m_score { score },
-        m_menu_state { board, this, menu_font, score, alive },
-        m_deal_state { board, this },
-        m_wait_ball_state { board, this, cursor_tile },
-        m_wait_dest_state { board, this, cursor_tile },
-        m_move_state { board, this },
-        m_score_state { board, this, score_font },
-        m_gameover_state { board, this, gameover_font },
-        m_current_state { nullptr }
-    {}
-    
-    void set_state_menu()
-    {
-        m_menu_state.reset();
-        m_current_state = &m_menu_state;
-    }
-
-    void set_state_wait_ball()
-    {
-        m_current_state = &m_wait_ball_state;
-    }
-
-    void reset_state_wait_ball(int src_x, int src_y, int color)
-    {
-        (*m_board)(src_x, src_y) = color;
-        set_state_wait_ball();
-    }
-
-    void set_state_wait_dest(int src_x, int src_y)
-    {
-        m_wait_dest_state.reset(src_x, src_y, (*m_board)(src_x, src_y), 0);
-        (*m_board)(src_x, src_y) = EMPTY;
-        m_current_state = &m_wait_dest_state;
-    }
-
-    void reset_state_wait_dest(int src_x, int src_y)
-    {
-        (*m_board)(m_wait_dest_state.get_src_x(), m_wait_dest_state.get_src_y()) = m_wait_dest_state.get_color();
-        set_state_wait_dest(src_x, src_y);
-    }
-
-    void set_state_deal(int count)
-    {
-        if (m_board->free_fields() <= count) {
-            set_state_gameover();
-            return;
-        }
-
-        m_deal_state.reset(DEAL_PERIOD, count);
-        m_current_state = &m_deal_state;
-    }
-
-    void set_state_gameover()
-    {
-        m_gameover_state.reset(m_score, GAMEOVER_PERIOD, 0);
-        m_current_state = &m_gameover_state;
-    }
-
-    void set_state_score(const std::vector<std::pair<int, int>>& changes, KulkiState::Enum next_state)
-    {
-        std::unordered_set<std::pair<int, int>> streaks;
-        bool success = false;
-
-        for (const auto& p : changes) {
-            success |= m_board->find_streak(p, std::inserter(streaks, begin(streaks)));
-        }
-
-        if (!success) {
-            switch (next_state) {
-            case KulkiState::Enum::DEAL:
-                set_state_deal(DEAL_COUNT_INGAME);
-                return;
-            case KulkiState::Enum::WAIT_BALL:
-                set_state_wait_ball();
-                return;
-            default:
-                throw std::domain_error("m_set_state_score: bad next_state argument");
-            }
-        }
-
-        int score_incr = 0;
-        int x_sum = 0, y_sum = 0;
-        for (const auto& p : streaks) {
-            (*m_board)(p.first, p.second) = EMPTY;
-            ++score_incr;
-            x_sum += p.first;
-            y_sum += p.second;
-        }
-        (*m_score) += score_incr;
-
-        m_score_state.reset(
-                SCORE_PERIOD,
-                double(x_sum) / double(streaks.size()) + 0.5,
-                double(y_sum) / double(streaks.size()) + 0.5,
-                score_incr);
-
-        m_current_state = &m_score_state;
-    }
-
-    void set_state_move(int src_x, int src_y, int dst_x, int dst_y, int color)
-    {
-        std::deque<std::pair<int, int>> path;
-
-        if (!m_board->find_path({ src_x, src_y }, { dst_x, dst_y }, path)) {
-            reset_state_wait_ball(src_x, src_y, color);
-            return;
-        }
-
-        m_move_state.reset(std::move(path), MOVE_PERIOD, dst_x, dst_y, color);
-        m_current_state = &m_move_state;
-    }
-};
-
-void MenuState::m_select()
-{
-    const std::string& entry = m_entries[m_current];
-
-    if (entry == "New game") {
-        m_board->clear();
-        *m_score = 0;
-        m_context->set_state_deal(DEAL_COUNT_INIT);
-
-    } else if (entry == "Exit") {
-        *m_alive = false;
-
-    } else {
-        throw std::runtime_error("Incogerent menu configuration");
-
-    }
-}
-
-void DealState::tick(double dt)
-{
-    if ((m_time -= dt) > 0) return;
-    else m_time = DEAL_PERIOD;
-
-    int x, y, color;
-    m_new_ball(*m_board, x, y, color);
-    (*m_board)(x, y) = color;
-    m_positions.emplace_back(x, y);
-
-    if ((--m_count) == 0) {
-        m_context->set_state_score(m_positions, KulkiState::Enum::WAIT_BALL);
-    }
-}
-
-void WaitBallState::on_button(int button, bool down)
-{
-    int tx = m_cursor_tile->first;
-    int ty = m_cursor_tile->second;
-    if ((*m_board)(tx, ty) != EMPTY) {
-        m_context->set_state_wait_dest(tx, ty);
-    }
-}
-
-void WaitDestState::on_button(int button, bool down)
-{
-    int tx = m_cursor_tile->first;
-    int ty = m_cursor_tile->second;
-
-    if (tx == m_src_x && ty == m_src_y)
-        m_context->reset_state_wait_ball(m_src_x, m_src_y, m_color);
-
-    else if ((*m_board)(tx, ty) != EMPTY)
-        m_context->reset_state_wait_dest(tx, ty);
-
-    else
-        m_context->set_state_move(m_src_x, m_src_y, tx, ty, m_color);
-}
-
-void MoveState::tick(double dt)
-{
-    if ((m_time -= dt) > 0) return;
-    else m_time = MOVE_PERIOD;
-
-    m_path.pop_front();
-
-    if (m_path.size() == 1) {
-        (*m_board)(m_dst_x, m_dst_y) = m_color;
-        m_context->set_state_score({ { m_dst_x, m_dst_y } }, KulkiState::Enum::DEAL);
-    }
-}
-
-void ScoreState::tick(double dt)
-{
-    if ((m_time -= dt) > 0) return;
-    m_context->set_state_wait_ball();
-}
-
-void GameoverState::on_key(int key, bool down)
-{
-    m_context->set_state_menu();
 }
 
 class Kulki {
@@ -675,7 +85,7 @@ class Kulki {
 
     glm::mat3 m_current_transform()
     {
-        return scale(FIELD_W) * translate(BOARD_SHIFT_X, BOARD_SHIFT_Y); 
+        return scale(config::FIELD_W) * translate(config::BOARD_SHIFT_X, config::BOARD_SHIFT_Y);
     }
 
     void m_on_key(int key, bool down)
@@ -718,10 +128,16 @@ class Kulki {
     {
         glm::mat3 transf = m_current_transform();
 
-        al_clear_to_color(BG_COLOR);
+        al_clear_to_color(config::BG_COLOR);
 
         draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
-        al_draw_textf(m_score_font, SCORE_COLOR, SCORE_SHIFT_X, SCORE_SHIFT_Y, ALLEGRO_ALIGN_LEFT, "Score : %d", m_score);
+        al_draw_textf(m_score_font,
+                config::SCORE_COLOR,
+                config::SCORE_SHIFT_X,
+                config::SCORE_SHIFT_Y,
+                ALLEGRO_ALIGN_LEFT,
+                "Score : %d",
+                m_score);
         m_state_context.m_current_state->draw(transf);
 
         al_flip_display();
@@ -730,10 +146,10 @@ class Kulki {
 public:
     Kulki() :
         m_alive { true },
-        m_board { BOARD_W, BOARD_H },
-        m_gameover_font { al_load_font("prstartk.ttf", -GAMEOVER_FONT_SIZE, 0) },
-        m_score_font { al_load_font("prstartk.ttf", -SCORE_FONT_SIZE, 0) },
-        m_menu_font { al_load_font("prstartk.ttf", -MENU_FONT_SIZE, 0) },
+        m_board { config::BOARD_W, config::BOARD_H },
+        m_gameover_font { al_load_font("prstartk.ttf", -config::GAMEOVER_FONT_SIZE, 0) },
+        m_score_font { al_load_font("prstartk.ttf", -config::SCORE_FONT_SIZE, 0) },
+        m_menu_font { al_load_font("prstartk.ttf", -config::MENU_FONT_SIZE, 0) },
         m_cursor_screen { -1, -1 },
         m_cursor_tile { -1, -1 },
         m_score { 0 },

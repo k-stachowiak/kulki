@@ -113,8 +113,8 @@ class Kulki {
         glm::vec3 screen_pos { x, y, 1 };
         glm::vec3 tile_pos = screen_pos * inv;
 
-        m_cursor_tile.first = tile_pos.x;
-        m_cursor_tile.second = tile_pos.y;
+        m_cursor_tile.first = floor(tile_pos.x);
+        m_cursor_tile.second = floor(tile_pos.y);
 
         m_state_context.m_current_state->on_cursor(x, y);
     }

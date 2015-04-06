@@ -155,7 +155,7 @@ void WaitBallState::on_button(int button, bool down)
 {
     int tx = m_cursor_tile->first;
     int ty = m_cursor_tile->second;
-    if ((*m_board)(tx, ty) != config::EMPTY) {
+    if (m_board->has(tx, ty) && (*m_board)(tx, ty) != config::EMPTY) {
         m_context->set_state_wait_dest(tx, ty);
     }
 }
@@ -193,14 +193,13 @@ void WaitDestState::on_button(int button, bool down)
     int tx = m_cursor_tile->first;
     int ty = m_cursor_tile->second;
 
-    if (tx == m_src_x && ty == m_src_y)
+    if ((tx == m_src_x && ty == m_src_y) || !m_board->has(tx, ty)) {
         m_context->reset_state_wait_ball(m_src_x, m_src_y, m_color);
-
-    else if ((*m_board)(tx, ty) != config::EMPTY)
+    } else if ((*m_board)(tx, ty) != config::EMPTY) {
         m_context->reset_state_wait_dest(tx, ty);
-
-    else
+    } else {
         m_context->set_state_move(m_src_x, m_src_y, tx, ty, m_color);
+    }
 }
 
 MoveState::MoveState(Board* board, KulkiContext* context) :

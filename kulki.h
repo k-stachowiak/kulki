@@ -14,7 +14,8 @@
 
 #include "board.h"
 #include "allegro.h"
-#include "kulki_states.h"
+#include "kulki_state.h"
+#include "kulki_context.h"
 
 void draw_field(
         const glm::vec3& top_left, const glm::vec3& bot_right,

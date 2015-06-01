@@ -23,7 +23,7 @@ HighScoreState::HighScoreState(KulkiContext* context, ALLEGRO_FONT* menu_font) :
 void HighScoreState::reset(int score)
 {
     m_score = score;
-    m_high_score.reset(new HighScore { "highs_score" });
+    m_high_score.reset(new HighScore { "high_score" });
     if (m_high_score->insert_position(m_score) != -1) {
         std::cout << "insert position = " << m_high_score->insert_position(m_score) << std::endl;
         m_phase = HIGH_SCORE_INPUT;

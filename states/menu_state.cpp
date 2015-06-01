@@ -31,6 +31,10 @@ void MenuState::m_select()
         *m_score = 0;
         m_context->set_state_deal(config::DEAL_COUNT_INIT);
 
+    } else if (entry == "High score") {
+        *m_score = -1;
+        m_context->set_state_high_score();
+
     } else if (entry == "Exit") {
         *m_alive = false;
 
@@ -46,7 +50,7 @@ MenuState::MenuState(Board* board, KulkiContext* const context, ALLEGRO_FONT* me
     m_menu_font { menu_font },
     m_score { score },
     m_alive { alive },
-    m_entries { "New game", "Exit" },
+    m_entries { "New game", "High score", "Exit" },
     m_current { 0 }
 {
     std::tie(m_width, m_height) = m_compute_dimensions();

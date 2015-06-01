@@ -42,8 +42,8 @@
 (bind MENU_MARGIN 10.0)
 (bind MENU_FONT_SIZE 30)
 
-(bind MENU_SELECT_COLOR [ 1.0 1.0 0.0 ])
-(bind MENU_REGULAR_COLOR [ 0.0 1.0 0.0 ])
+(bind MENU_REGULAR_COLOR [ 0.75 0.75 0.75 ])
+(bind MENU_SELECT_COLOR [ 0.5 0.5 1.0 ])
 (bind MENU_BG_COLOR_L [ 0.333 0.333 0.333 ])
 (bind MENU_BG_COLOR_D [ 0.25 0.25 0.25 ])
 

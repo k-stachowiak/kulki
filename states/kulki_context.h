@@ -17,6 +17,11 @@ struct KulkiContext {
     int* m_score;
     bool* m_alive;
 
+    std::pair<int, int>* m_cursor_tile;
+    ALLEGRO_FONT *m_score_font;
+    ALLEGRO_FONT *m_gameover_font;
+    ALLEGRO_FONT *m_menu_font;
+
     MenuState m_menu_state;
     DealState m_deal_state;
     WaitBallState m_wait_ball_state;

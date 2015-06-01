@@ -56,25 +56,17 @@ void MenuState::reset()
 {
 }
 
-void MenuState::on_key(int key, bool down)
+void MenuState::on_button(int button, bool down)
 {
-    if (!down) {
-        return;
-    }
-
-    switch (key) {
-    case ALLEGRO_KEY_DOWN:
-        m_current = (m_current - 1) % m_entries.size();
-        break;
-    case ALLEGRO_KEY_UP:
-        m_current = (m_current + 1) % m_entries.size();
-        break;
-    case ALLEGRO_KEY_ENTER:
+    if (button == 1 && down) {
         m_select();
-        break;
-    default:
-        break;
     }
+}
+
+void MenuState::on_cursor(int x, int y)
+{
+    m_cursor.first = x;
+    m_cursor.second = y;
 }
 
 void MenuState::draw(const glm::mat3&)
@@ -100,6 +92,10 @@ void MenuState::draw(const glm::mat3&)
         al_draw_textf(m_menu_font, color, cx, cy - height / 2, ALLEGRO_ALIGN_CENTRE, "%s", entry.c_str());
 
         y += height + 2.0 * config::MENU_PADDING + config::MENU_MARGIN;
+
+        if (m_cursor.first > x1 && m_cursor.first < x2 && m_cursor.second > y1 && m_cursor.second < y2) {
+            m_current = i;
+        }
     }
 }
 

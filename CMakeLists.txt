@@ -5,6 +5,7 @@ project(kulki)
 
 include_directories(
     ./xeno
+    ./model
     ./states
     .
     )
@@ -17,7 +18,7 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror -g -O0")
 
 add_executable(kulki
-./high_score.cpp
+./model/high_score.cpp
 ./states/high_score_state.cpp
 ./states/game_over_state.cpp
 ./states/wait_dest_state.cpp

@@ -48,6 +48,7 @@ extern int DEAL_COUNT_INIT;
 extern int DEAL_COUNT_INGAME;
 
 extern double MOVE_PERIOD;
+extern double BUMP_PERIOD;
 extern double SCORE_PERIOD;
 
 extern int GAMEOVER_SHIFT_X;

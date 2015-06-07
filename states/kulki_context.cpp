@@ -16,19 +16,89 @@ KulkiContext::KulkiContext(
         std::pair<int, int>* cursor_tile,
         ALLEGRO_FONT* score_font,
         ALLEGRO_FONT* gameover_font,
-        ALLEGRO_FONT* menu_font) :
+        ALLEGRO_FONT* menu_font,
+        ALLEGRO_BITMAP *ball_bmp) :
     m_board { board },
     m_score { score },
+    m_alive { alive },
+    m_cursor_tile { cursor_tile },
+    m_score_font { score_font },
+    m_gameover_font { gameover_font },
+    m_menu_font { menu_font },
+    m_ball_bmp { ball_bmp },
     m_menu_state { board, this, menu_font, score, alive },
     m_deal_state { board, this },
     m_wait_ball_state { board, this, cursor_tile },
     m_wait_dest_state { board, this, cursor_tile },
     m_move_state { board, this },
-    m_score_state { this, score_font },
-    m_gameover_state { this, gameover_font },
-    m_high_score_state { this, menu_font },
+    m_score_state { this },
+    m_gameover_state { this },
+    m_high_score_state { this },
     m_current_state { nullptr }
 {}
+
+void KulkiContext::draw_field(
+        const glm::vec3& top_left, const glm::vec3& bot_right,
+        bool fill, const glm::mat3& transf)
+{
+    glm::vec3 out_top_left = top_left * transf;
+    glm::vec3 out_bot_right = bot_right * transf;
+    double x1 = out_top_left.x, y1 = out_top_left.y;
+    double x2 = out_bot_right.x, y2 = out_bot_right.y;
+
+    if (fill) {
+        al_draw_filled_rectangle(x1, y1, x2, y2, config::FIELD_COLOR);
+    } else {
+        al_draw_rectangle(x1, y1, x2, y2, config::FIELD_COLOR, config::FIELD_THICK);
+    }
+}
+
+void KulkiContext::draw_ball(
+        double x, double y, int color, double r,
+        double squeeze,
+        const glm::mat3& transf)
+{
+    glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
+
+    float red, green, blue;
+    al_unmap_rgb_f(config::BALL_COLORS[color], &red, &green, &blue);
+
+    ALLEGRO_COLOR filtered_color = al_map_rgb_f(
+            red * config::BALL_COLOR_FILTER.r,
+            green * config::BALL_COLOR_FILTER.g,
+            blue * config::BALL_COLOR_FILTER.b);
+
+    double image_w = al_get_bitmap_width(m_ball_bmp);
+    double xscale = 2.0 * r / image_w;
+    double image_h = al_get_bitmap_height(m_ball_bmp);
+    double yscale = 2.0 * r / image_h;
+
+    al_draw_tinted_scaled_rotated_bitmap(
+            m_ball_bmp,
+            filtered_color,
+            image_w * 0.5,
+            image_h * 0.5,
+            c.x, c.y,
+            xscale, yscale * squeeze,
+            0.0,
+            0);
+}
+
+void KulkiContext::draw_board(const Board& b, const glm::mat3& transf)
+{
+    for (int x = 0; x < b.m_width; ++x) {
+        for (int y = 0; y < b.m_height; ++y) {
+            draw_field(
+                glm::vec3 { x + config::FIELD_MARGIN, y + config::FIELD_MARGIN, 1.0 },
+                glm::vec3 { x + 1.0 - config::FIELD_MARGIN, y + 1.0 - config::FIELD_MARGIN, 1.0 },
+                x == m_cursor_tile->first && y == m_cursor_tile->second,
+                transf);
+            if (b(x, y) != config::EMPTY) {
+                draw_ball(x + 0.5, y + 0.5, b(x, y), config::BALL_RADIUS, 1.0, transf);
+            }
+        }
+    }
+}
 
 void KulkiContext::set_state_menu()
 {

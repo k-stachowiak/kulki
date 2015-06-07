@@ -32,7 +32,7 @@ struct KulkiState {
     virtual void draw(const glm::mat3& transf) {}
 };
 
-void draw_ball(double x, double y, int color, double r, const glm::mat3& transf);
+void draw_ball(double x, double y, int color, double r, double squeeze, const glm::mat3& transf, ALLEGRO_BITMAP *ball_bmp);
 
 #endif
 

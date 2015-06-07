@@ -18,15 +18,20 @@ void WaitDestState::reset(int src_x, int src_y, int color, double time)
 void WaitDestState::tick(double dt)
 {
     m_time += dt;
-    m_time = fmod(m_time, config::MOVE_PERIOD);
+    m_time = fmod(m_time, config::BUMP_PERIOD);
 }
 
 void WaitDestState::draw(const glm::mat3& transf)
 {
-    double factor = double(m_time) / config::MOVE_PERIOD * 3.14;
+    double bmp_factor = double(m_time) / config::BUMP_PERIOD * 3.14;
+    double sqz_factor = double(m_time) / config::BUMP_PERIOD * 2.0 * 3.14;
+
     double x = double(m_src_x) + 0.5;
-    double y = double(m_src_y) + 0.5 - sin(factor) * config::BALL_JUMP_H;
-    draw_ball(x, y, m_color, config::BALL_RADIUS, transf);
+    double y = double(m_src_y) + 0.5 - sin(bmp_factor) * config::BALL_JUMP_H;
+
+    double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
+
+    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, transf);
 }
 
 void WaitDestState::on_button(int button, bool down)

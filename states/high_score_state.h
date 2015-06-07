@@ -6,7 +6,6 @@
 class HighScoreState : public KulkiState {
 
     KulkiContext* const m_context;
-    ALLEGRO_FONT* m_menu_font;
 
     enum {
         HIGH_SCORE_INPUT,
@@ -20,7 +19,7 @@ class HighScoreState : public KulkiState {
     std::vector<std::string> m_gen_outries(const std::vector<HighScore::Entry>& entries);
 
 public:
-    HighScoreState(KulkiContext* context, ALLEGRO_FONT* menu_font);
+    HighScoreState(KulkiContext* context);
     void reset(int score);
     void on_key(int key, bool down) override;
     void draw(const glm::mat3&) override;

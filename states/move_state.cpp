@@ -35,12 +35,15 @@ void MoveState::draw(const glm::mat3& transf)
     double x2 = m_path[1].first;
     double y2 = m_path[1].second;
 
-    double mv_factor = m_time / config::MOVE_PERIOD;
-    double bmp_factor = (1.0 - mv_factor) * 3.14;
+    double mv_factor = double(m_time) / config::MOVE_PERIOD;
+    double bmp_factor = double(m_time) / config::MOVE_PERIOD * 3.14;
+    double sqz_factor = double(m_time) / config::MOVE_PERIOD * 2.0 * 3.14;
 
     double x = x1 * mv_factor + x2 * (1.0 - mv_factor) + 0.5;
     double y = y1 * mv_factor + y2 * (1.0 - mv_factor) + 0.5 - sin(bmp_factor) * config::BALL_JUMP_H;
 
-    draw_ball(x, y, m_color, config::BALL_RADIUS, transf);
+    double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
+
+    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, transf);
 }
 

@@ -24,6 +24,7 @@
     [ 1.0 1.0 1.0 ] ])
 (bind BALL_COLOR_FILTER [ 0.9 0.9 0.9 ])
 (bind MOVE_PERIOD 0.25)
+(bind BUMP_PERIOD 0.5)
 
 (bind SCORE_COLOR [ 1.0 1.0 1.0 ])
 (bind SCORE_FONT_SIZE 24)

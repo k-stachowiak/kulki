@@ -13,7 +13,7 @@ class ScoreState : public KulkiState {
     int m_incr;
 
 public:
-    ScoreState(KulkiContext* context, ALLEGRO_FONT* score_font);
+    ScoreState(KulkiContext* context);
     void reset(double time, double cx, double cy, int incr);
     void tick(double dt) override;
     void draw(const glm::mat3& transf) override;

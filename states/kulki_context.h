@@ -21,6 +21,7 @@ struct KulkiContext {
     ALLEGRO_FONT *m_score_font;
     ALLEGRO_FONT *m_gameover_font;
     ALLEGRO_FONT *m_menu_font;
+    ALLEGRO_BITMAP *m_ball_bmp;
 
     MenuState m_menu_state;
     DealState m_deal_state;
@@ -34,7 +35,12 @@ struct KulkiContext {
     KulkiState *m_current_state;
 
     KulkiContext(Board* board, int* score, bool* alive, std::pair<int, int>* cursor_tile,
-            ALLEGRO_FONT* score_font, ALLEGRO_FONT* gameover_font, ALLEGRO_FONT* menu_font);
+            ALLEGRO_FONT* score_font, ALLEGRO_FONT* gameover_font, ALLEGRO_FONT* menu_font,
+            ALLEGRO_BITMAP *ball_bmp);
+
+    void draw_field(const glm::vec3& top_left, const glm::vec3& bot_right, bool fill, const glm::mat3& transf);
+    void draw_ball(double x, double y, int color, double r, double squeeze, const glm::mat3& transf);
+    void draw_board(const Board& b, const glm::mat3& transf);
 
     void set_state_menu();
 

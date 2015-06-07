@@ -3,9 +3,8 @@
 #include "game_over_state.h"
 #include "kulki_context.h"
 
-GameoverState::GameoverState(KulkiContext* context, ALLEGRO_FONT* gameover_font) :
-    m_context { context },
-    m_gameover_font { gameover_font }
+GameoverState::GameoverState(KulkiContext* context) :
+    m_context { context }
 {}
 
 void GameoverState::reset(int *score, double time, int index)
@@ -28,7 +27,7 @@ void GameoverState::tick(double dt)
 void GameoverState::draw(const glm::mat3& transf)
 {
     al_draw_text(
-        m_gameover_font, config::BALL_COLORS[m_index],
+        m_context->m_gameover_font, config::BALL_COLORS[m_index],
         config::GAMEOVER_SHIFT_X, config::GAMEOVER_SHIFT_Y,
         ALLEGRO_ALIGN_CENTRE,
         "Game Over");

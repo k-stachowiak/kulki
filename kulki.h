@@ -17,53 +17,6 @@
 #include "kulki_state.h"
 #include "kulki_context.h"
 
-void draw_field(
-        const glm::vec3& top_left, const glm::vec3& bot_right,
-        bool fill, const glm::mat3& transf)
-{
-    glm::vec3 out_top_left = top_left * transf;
-    glm::vec3 out_bot_right = bot_right * transf;
-    double x1 = out_top_left.x, y1 = out_top_left.y;
-    double x2 = out_bot_right.x, y2 = out_bot_right.y;
-
-    if (fill) {
-        al_draw_filled_rectangle(x1, y1, x2, y2, config::FIELD_COLOR);
-    } else {
-        al_draw_rectangle(x1, y1, x2, y2, config::FIELD_COLOR, config::FIELD_THICK);
-    }
-}
-
-void draw_ball(double x, double y, int color, double r, const glm::mat3& transf)
-{
-    glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
-
-    float red, green, blue;
-    al_unmap_rgb_f(config::BALL_COLORS[color], &red, &green, &blue);
-
-    ALLEGRO_COLOR filtered_color = al_map_rgb_f(
-            red * config::BALL_COLOR_FILTER.r,
-            green * config::BALL_COLOR_FILTER.g,
-            blue * config::BALL_COLOR_FILTER.b);
-
-    al_draw_filled_circle(c.x, c.y, r, filtered_color);
-}
-
-void draw_board(const Board& b, int hlx, int hly, const glm::mat3& transf)
-{
-    for (int x = 0; x < b.m_width; ++x) {
-        for (int y = 0; y < b.m_height; ++y) {
-            draw_field(
-                glm::vec3 { x + config::FIELD_MARGIN, y + config::FIELD_MARGIN, 1.0 },
-                glm::vec3 { x + 1.0 - config::FIELD_MARGIN, y + 1.0 - config::FIELD_MARGIN, 1.0 },
-                x == hlx && y == hly,
-                transf);
-            if (b(x, y) != config::EMPTY) {
-                draw_ball(x + 0.5, y + 0.5, b(x, y), config::BALL_RADIUS, transf);
-            }
-        }
-    }
-}
-
 class Kulki {
 
     bool m_alive;
@@ -71,6 +24,7 @@ class Kulki {
     ALLEGRO_FONT* m_gameover_font;
     ALLEGRO_FONT* m_score_font;
     ALLEGRO_FONT* m_menu_font;
+    ALLEGRO_BITMAP *m_ball_bmp;
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
@@ -131,7 +85,6 @@ class Kulki {
 
         al_clear_to_color(config::BG_COLOR);
 
-        draw_board(m_board, m_cursor_tile.first, m_cursor_tile.second, transf);
         al_draw_textf(m_score_font,
                 config::SCORE_COLOR,
                 config::SCORE_SHIFT_X,
@@ -139,6 +92,9 @@ class Kulki {
                 ALLEGRO_ALIGN_LEFT,
                 "Score : %d",
                 m_score);
+
+        m_state_context.draw_board(m_board, transf);
+
         m_state_context.m_current_state->draw(transf);
 
         al_flip_display();
@@ -148,13 +104,18 @@ public:
     Kulki() :
         m_alive { true },
         m_board { config::BOARD_W, config::BOARD_H },
-        m_gameover_font { al_load_font("prstartk.ttf", -config::GAMEOVER_FONT_SIZE, 0) },
-        m_score_font { al_load_font("prstartk.ttf", -config::SCORE_FONT_SIZE, 0) },
-        m_menu_font { al_load_font("prstartk.ttf", -config::MENU_FONT_SIZE, 0) },
+        m_gameover_font { al_load_font("data/prstartk.ttf", -config::GAMEOVER_FONT_SIZE, 0) },
+        m_score_font { al_load_font("data/prstartk.ttf", -config::SCORE_FONT_SIZE, 0) },
+        m_menu_font { al_load_font("data/prstartk.ttf", -config::MENU_FONT_SIZE, 0) },
+        m_ball_bmp { al_load_bitmap("data/ball.png") },
         m_cursor_screen { -1, -1 },
         m_cursor_tile { -1, -1 },
         m_score { 0 },
-        m_state_context { &m_board, &m_score, &m_alive, &m_cursor_tile, m_score_font, m_gameover_font, m_menu_font }
+        m_state_context {
+            &m_board, &m_score, &m_alive, &m_cursor_tile,
+            m_score_font, m_gameover_font, m_menu_font,
+            m_ball_bmp
+        }
     {
         m_state_context.set_state_menu();
     }

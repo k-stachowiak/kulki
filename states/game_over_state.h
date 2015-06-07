@@ -5,7 +5,6 @@
 
 class GameoverState : public KulkiState {
     KulkiContext* const m_context;
-    ALLEGRO_FONT* m_gameover_font;
 
     int* m_score;
 
@@ -13,7 +12,7 @@ class GameoverState : public KulkiState {
     int m_index;
 
 public:
-    GameoverState(KulkiContext* context, ALLEGRO_FONT* gameover_font);
+    GameoverState(KulkiContext* context);
     void reset(int *score, double time, int index);
     void tick(double dt) override;
     void draw(const glm::mat3& transf) override;

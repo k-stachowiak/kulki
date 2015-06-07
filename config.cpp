@@ -43,6 +43,7 @@ int DEAL_COUNT_INIT;
 int DEAL_COUNT_INGAME;
 
 double MOVE_PERIOD;
+double BUMP_PERIOD;
 double SCORE_PERIOD;
 
 int GAMEOVER_SHIFT_X;
@@ -193,6 +194,7 @@ void load()
     DEAL_COUNT_INGAME = load_int("DEAL_COUNT_INGAME");
 
     MOVE_PERIOD = load_real("MOVE_PERIOD");
+    BUMP_PERIOD = load_real("BUMP_PERIOD");
     SCORE_PERIOD = load_real("SCORE_PERIOD");
 
     GAMEOVER_SHIFT_X = load_int("GAMEOVER_SHIFT_X");

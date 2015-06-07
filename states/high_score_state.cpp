@@ -15,9 +15,8 @@ std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighSco
     return result;
 }
 
-HighScoreState::HighScoreState(KulkiContext* context, ALLEGRO_FONT* menu_font) :
-    m_context { context },
-    m_menu_font { menu_font }
+HighScoreState::HighScoreState(KulkiContext* context) :
+    m_context { context }
 {}
 
 void HighScoreState::reset(int score)
@@ -62,16 +61,16 @@ void HighScoreState::on_key(int key, bool down)
 
 void HighScoreState::draw(const glm::mat3&)
 {
-    const double text_height = al_get_font_line_height(m_menu_font);
+    const double text_height = al_get_font_line_height(m_context->m_menu_font);
     const double line_height = text_height + 20;
     const std::vector<std::string> outries = m_gen_outries(m_high_score->get_entries());
     double y = config::SCREEN_H / 2 - (outries.size() / 2) * line_height;
     for (decltype(outries)::size_type i = 0; i < outries.size(); ++i) {
         if (m_phase == HIGH_SCORE_INPUT && i == (unsigned)m_high_score->insert_position(m_score)) {
-            al_draw_text(m_menu_font, al_map_rgb_f(1, 1, 1), config::SCREEN_W / 2, y, ALLEGRO_ALIGN_CENTRE, m_input_name.c_str());
+            al_draw_text(m_context->m_menu_font, al_map_rgb_f(1, 1, 1), config::SCREEN_W / 2, y, ALLEGRO_ALIGN_CENTRE, m_input_name.c_str());
         } else {
             const auto& outry = outries.at(i);
-            al_draw_text(m_menu_font, al_map_rgb_f(1, 1, 1), config::SCREEN_W / 2, y, ALLEGRO_ALIGN_CENTRE, outry.c_str());
+            al_draw_text(m_context->m_menu_font, al_map_rgb_f(1, 1, 1), config::SCREEN_W / 2, y, ALLEGRO_ALIGN_CENTRE, outry.c_str());
         }
         y += line_height;
     }

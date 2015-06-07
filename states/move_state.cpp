@@ -1,8 +1,7 @@
 #include "move_state.h"
 #include "kulki_context.h"
 
-MoveState::MoveState(Board* board, KulkiContext* context) :
-    m_board { board },
+MoveState::MoveState(KulkiContext* context) :
     m_context { context }
 {}
 
@@ -23,7 +22,7 @@ void MoveState::tick(double dt)
     m_path.pop_front();
 
     if (m_path.size() == 1) {
-        (*m_board)(m_dst_x, m_dst_y) = m_color;
+        (*m_context->m_board)(m_dst_x, m_dst_y) = m_color;
         m_context->set_state_score({ { m_dst_x, m_dst_y } }, KulkiState::Enum::DEAL);
     }
 }

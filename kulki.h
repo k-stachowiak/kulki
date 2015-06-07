@@ -28,7 +28,6 @@ class Kulki {
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
-    int m_score;
 
     KulkiContext m_state_context;
 
@@ -45,11 +44,6 @@ class Kulki {
 
     void m_on_key(int key, bool down)
     {
-        if (key == ALLEGRO_KEY_ESCAPE && down) {
-            m_state_context.set_state_menu();
-            return;
-        }
-
         m_state_context.m_current_state->on_key(key, down);
     }
 
@@ -91,7 +85,13 @@ class Kulki {
                 config::SCORE_SHIFT_Y,
                 ALLEGRO_ALIGN_LEFT,
                 "Score : %d",
-                m_score);
+                m_state_context.m_score);
+
+        int ball_index = 0;
+        for (const auto& ball : m_state_context.m_next_deal) {
+            int color = std::get<2>(ball);
+            m_state_context.draw_ball(-2 + 0.5, ball_index++ + 0.5, color, config::BALL_RADIUS, 1.0, transf);
+        }
 
         m_state_context.draw_board(m_board, transf);
 
@@ -110,9 +110,8 @@ public:
         m_ball_bmp { al_load_bitmap("data/ball.png") },
         m_cursor_screen { -1, -1 },
         m_cursor_tile { -1, -1 },
-        m_score { 0 },
         m_state_context {
-            &m_board, &m_score, &m_alive, &m_cursor_tile,
+            &m_board, &m_alive, &m_cursor_tile,
             m_score_font, m_gameover_font, m_menu_font,
             m_ball_bmp
         }

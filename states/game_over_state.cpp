@@ -7,9 +7,8 @@ GameoverState::GameoverState(KulkiContext* context) :
     m_context { context }
 {}
 
-void GameoverState::reset(int *score, double time, int index)
+void GameoverState::reset(double time, int index)
 {
-    m_score = score;
     m_time = time;
     m_index = index;
 }

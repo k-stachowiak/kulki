@@ -4,13 +4,11 @@
 #include "kulki_state.h"
 
 class WaitBallState : public KulkiState {
-    Board* const m_board;
     KulkiContext* const m_context;
 
-    std::pair<int, int>* m_cursor_tile;
-
 public:
-    WaitBallState(Board* board, KulkiContext* context, std::pair<int, int> *cursor_tile);
+    WaitBallState(KulkiContext* context);
+    void on_key(int key, bool down) override;
     void on_button(int button, bool down) override;
 };
 

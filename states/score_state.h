@@ -6,7 +6,6 @@
 class ScoreState : public KulkiState {
 
     KulkiContext* const m_context;
-    ALLEGRO_FONT* m_score_font;
 
     double m_time;
     double m_cx, m_cy;

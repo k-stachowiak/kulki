@@ -1,3 +1,5 @@
+#include <random>
+
 #include "kulki_context.h"
 
 #include "deal_state.h"
@@ -9,9 +11,13 @@
 #include "wait_ball_state.h"
 #include "wait_dest_state.h"
 
+namespace {
+    std::random_device device;
+    std::mt19937 engine { device() };
+}
+
 KulkiContext::KulkiContext(
         Board* board,
-        int* score,
         bool* alive,
         std::pair<int, int>* cursor_tile,
         ALLEGRO_FONT* score_font,
@@ -19,23 +25,42 @@ KulkiContext::KulkiContext(
         ALLEGRO_FONT* menu_font,
         ALLEGRO_BITMAP *ball_bmp) :
     m_board { board },
-    m_score { score },
     m_alive { alive },
     m_cursor_tile { cursor_tile },
     m_score_font { score_font },
     m_gameover_font { gameover_font },
     m_menu_font { menu_font },
     m_ball_bmp { ball_bmp },
-    m_menu_state { board, this, menu_font, score, alive },
-    m_deal_state { board, this },
-    m_wait_ball_state { board, this, cursor_tile },
-    m_wait_dest_state { board, this, cursor_tile },
-    m_move_state { board, this },
+    m_menu_state { this },
+    m_deal_state { this },
+    m_wait_ball_state { this },
+    m_wait_dest_state { this },
+    m_move_state { this },
     m_score_state { this },
     m_gameover_state { this },
     m_high_score_state { this },
-    m_current_state { nullptr }
+    m_current_state { nullptr },
+    m_score { 0 },
+    m_streak { 0 }
 {}
+
+void KulkiContext::gen_next_deal(int count)
+{
+    std::uniform_int_distribution<int> distr_x(0, m_board->m_width - 1);
+    std::uniform_int_distribution<int> distr_y(0, m_board->m_height - 1);
+    std::uniform_int_distribution<int> distr_color(0, config::BALL_COLORS.size() - 1);
+
+    for (int i = 0; i < count; ++i) {
+        int x, y;
+        do {
+            x = distr_x(engine);
+            y = distr_y(engine);
+        } while ((*m_board)(x, y) != config::EMPTY);
+        int color = distr_color(engine);
+        m_next_deal.emplace_back(x, y, color);
+    }
+}
+
 
 void KulkiContext::draw_field(
         const glm::vec3& top_left, const glm::vec3& bot_right,
@@ -130,36 +155,40 @@ void KulkiContext::reset_state_wait_dest(int src_x, int src_y)
     set_state_wait_dest(src_x, src_y);
 }
 
-void KulkiContext::set_state_deal(int count)
+void KulkiContext::set_state_deal()
 {
-    if (m_board->free_fields() <= count) {
+    if (m_board->free_fields() <= config::DEAL_COUNT_INGAME) {
         set_state_high_score();
         return;
     }
 
-    m_deal_state.reset(config::DEAL_PERIOD, count);
+    m_deal_state.reset(config::DEAL_PERIOD);
     m_current_state = &m_deal_state;
 }
 
 void KulkiContext::set_state_gameover()
 {
-    m_gameover_state.reset(m_score, config::GAMEOVER_PERIOD, 0);
+    m_gameover_state.reset(config::GAMEOVER_PERIOD, 0);
     m_current_state = &m_gameover_state;
 }
 
 void KulkiContext::set_state_score(const std::vector<std::pair<int, int>>& changes, KulkiState::Enum next_state)
 {
-    std::unordered_set<std::pair<int, int>> streaks;
+    std::unordered_set<std::pair<int, int>> scored;
     bool success = false;
 
     for (const auto& p : changes) {
-        success |= m_board->find_streak(p, std::inserter(streaks, begin(streaks)));
+        success |= m_board->find_streak(p, std::inserter(scored, begin(scored)));
     }
 
-    if (!success) {
+    if (success) {
+        ++m_streak;
+
+    } else {
+        m_streak = 0;
         switch (next_state) {
         case KulkiState::Enum::DEAL:
-            set_state_deal(config::DEAL_COUNT_INGAME);
+            set_state_deal();
             return;
         case KulkiState::Enum::WAIT_BALL:
             set_state_wait_ball();
@@ -169,20 +198,20 @@ void KulkiContext::set_state_score(const std::vector<std::pair<int, int>>& chang
         }
     }
 
-    int score_incr = 0;
     int x_sum = 0, y_sum = 0;
-    for (const auto& p : streaks) {
+    for (const auto& p : scored) {
         (*m_board)(p.first, p.second) = config::EMPTY;
-        ++score_incr;
         x_sum += p.first;
         y_sum += p.second;
     }
-    (*m_score) += score_incr;
+
+    int score_incr = scored.size() * m_streak;
+    m_score += score_incr;
 
     m_score_state.reset(
             config::SCORE_PERIOD,
-            double(x_sum) / double(streaks.size()) + 0.5,
-            double(y_sum) / double(streaks.size()) + 0.5,
+            double(x_sum) / double(scored.size()) + 0.5,
+            double(y_sum) / double(scored.size()) + 0.5,
             score_incr);
 
     m_current_state = &m_score_state;
@@ -203,6 +232,6 @@ void KulkiContext::set_state_move(int src_x, int src_y, int dst_x, int dst_y, in
 
 void KulkiContext::set_state_high_score()
 {
-    m_high_score_state.reset(*m_score);
+    m_high_score_state.reset(m_score);
     m_current_state = &m_high_score_state;
 }

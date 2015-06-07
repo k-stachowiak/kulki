@@ -5,21 +5,14 @@
 
 class DealState : public KulkiState {
 
-    std::random_device m_rdev;
-    std::default_random_engine m_reng;
-
-    Board* const m_board;
     KulkiContext* const m_context;
 
     double m_time;
-    int m_count;
     std::vector<std::pair<int, int>> m_positions;
 
-    void m_new_ball(Board& b, int& x, int& y, int& color);
-
 public:
-    DealState(Board* board, KulkiContext* context);
-    void reset(double time, int count);
+    DealState(KulkiContext* context);
+    void reset(double time);
     void tick(double dt) override;
 };
 

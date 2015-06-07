@@ -14,7 +14,6 @@
 struct KulkiContext {
 
     Board* m_board;
-    int* m_score;
     bool* m_alive;
 
     std::pair<int, int>* m_cursor_tile;
@@ -33,10 +32,15 @@ struct KulkiContext {
     HighScoreState m_high_score_state;
 
     KulkiState *m_current_state;
+    std::vector<std::tuple<int, int, int>> m_next_deal;
+    int m_score;
+    int m_streak;
 
-    KulkiContext(Board* board, int* score, bool* alive, std::pair<int, int>* cursor_tile,
+    KulkiContext(Board* board, bool* alive, std::pair<int, int>* cursor_tile,
             ALLEGRO_FONT* score_font, ALLEGRO_FONT* gameover_font, ALLEGRO_FONT* menu_font,
             ALLEGRO_BITMAP *ball_bmp);
+
+    void gen_next_deal(int count);
 
     void draw_field(const glm::vec3& top_left, const glm::vec3& bot_right, bool fill, const glm::mat3& transf);
     void draw_ball(double x, double y, int color, double r, double squeeze, const glm::mat3& transf);
@@ -50,7 +54,7 @@ struct KulkiContext {
     void set_state_wait_dest(int src_x, int src_y);
     void reset_state_wait_dest(int src_x, int src_y);
 
-    void set_state_deal(int count);
+    void set_state_deal();
     void set_state_gameover();
     void set_state_score(const std::vector<std::pair<int, int>>& changes, KulkiState::Enum next_state);
     void set_state_move(int src_x, int src_y, int dst_x, int dst_y, int color);

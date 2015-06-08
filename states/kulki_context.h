@@ -21,6 +21,7 @@ struct KulkiContext {
     ALLEGRO_FONT *m_gameover_font;
     ALLEGRO_FONT *m_menu_font;
     ALLEGRO_BITMAP *m_ball_bmp;
+    ALLEGRO_BITMAP *m_tile_bmp;
 
     MenuState m_menu_state;
     DealState m_deal_state;
@@ -32,13 +33,13 @@ struct KulkiContext {
     HighScoreState m_high_score_state;
 
     KulkiState *m_current_state;
-    std::vector<std::tuple<int, int, int>> m_next_deal;
+    std::vector<int> m_next_deal;
     int m_score;
     int m_streak;
 
     KulkiContext(Board* board, bool* alive, std::pair<int, int>* cursor_tile,
             ALLEGRO_FONT* score_font, ALLEGRO_FONT* gameover_font, ALLEGRO_FONT* menu_font,
-            ALLEGRO_BITMAP *ball_bmp);
+            ALLEGRO_BITMAP *ball_bmp, ALLEGRO_BITMAP *tile_bmp);
 
     void gen_next_deal(int count);
 

@@ -25,6 +25,7 @@ class Kulki {
     ALLEGRO_FONT* m_score_font;
     ALLEGRO_FONT* m_menu_font;
     ALLEGRO_BITMAP *m_ball_bmp;
+    ALLEGRO_BITMAP *m_tile_bmp;
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
@@ -80,16 +81,11 @@ class Kulki {
         al_clear_to_color(config::BG_COLOR);
 
         al_draw_textf(m_score_font,
-                config::SCORE_COLOR,
-                config::SCORE_SHIFT_X,
-                config::SCORE_SHIFT_Y,
-                ALLEGRO_ALIGN_LEFT,
-                "Score : %d",
-                m_state_context.m_score);
+                config::SCORE_COLOR, config::SCORE_SHIFT_X, config::SCORE_SHIFT_Y, ALLEGRO_ALIGN_LEFT,
+                "Score : %d", m_state_context.m_score);
 
         int ball_index = 0;
-        for (const auto& ball : m_state_context.m_next_deal) {
-            int color = std::get<2>(ball);
+        for (int color : m_state_context.m_next_deal) {
             m_state_context.draw_ball(-2 + 0.5, ball_index++ + 0.5, color, config::BALL_RADIUS, 1.0, transf);
         }
 
@@ -107,13 +103,14 @@ public:
         m_gameover_font { al_load_font("data/prstartk.ttf", -config::GAMEOVER_FONT_SIZE, 0) },
         m_score_font { al_load_font("data/prstartk.ttf", -config::SCORE_FONT_SIZE, 0) },
         m_menu_font { al_load_font("data/prstartk.ttf", -config::MENU_FONT_SIZE, 0) },
-        m_ball_bmp { al_load_bitmap("data/ball.png") },
+        m_ball_bmp { al_load_bitmap("data/ball2.png") },
+        m_tile_bmp { al_load_bitmap("data/tile.png") },
         m_cursor_screen { -1, -1 },
         m_cursor_tile { -1, -1 },
         m_state_context {
             &m_board, &m_alive, &m_cursor_tile,
             m_score_font, m_gameover_font, m_menu_font,
-            m_ball_bmp
+            m_ball_bmp, m_tile_bmp
         }
     {
         m_state_context.set_state_menu();

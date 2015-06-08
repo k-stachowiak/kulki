@@ -6,10 +6,10 @@
 # User experience
 (bind BG_COLOR [ 0.5 0.5 0.5 ])
 
-(bind FIELD_COLOR [ 0.75 0.75 0.75 ])
+(bind FIELD_COLOR [ 0.667 0.667 0.667 ])
 (bind FIELD_W 64.0)
 (bind FIELD_THICK 1.0)
-(bind FIELD_MARGIN 0.025)
+(bind FIELD_MARGIN 0.05)
 
 (bind BALL_JUMP_H 0.333)
 (bind BALL_RADIUS (* 0.8 (/ FIELD_W 2.0)))
@@ -53,7 +53,7 @@
 # Gameplay
 (bind BOARD_W 9)
 (bind BOARD_H 9)
-(bind STREAK_MIN 5)
+(bind SERIE_MIN 5)
 (bind DEAL_COUNT_INIT 7)
 (bind DEAL_COUNT_INGAME 3)
 

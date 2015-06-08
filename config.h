@@ -41,7 +41,7 @@ extern int SCORE_FONT_SIZE;
 extern int SCORE_SHIFT_X;
 extern int SCORE_SHIFT_Y;
 
-extern int STREAK_MIN;
+extern int SERIE_MIN;
 
 extern double DEAL_PERIOD;
 extern int DEAL_COUNT_INIT;

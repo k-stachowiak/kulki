@@ -90,7 +90,12 @@ void MenuState::draw(const glm::mat3&)
         const double cx = x + m_width / 2.0;
         const double cy = y + config::MENU_MARGIN + config::MENU_PADDING + height / 2.0;
         const auto color = (i == m_current) ? config::MENU_SELECT_COLOR : config::MENU_REGULAR_COLOR;
-        al_draw_textf(m_context->m_menu_font, color, cx, cy - height / 2, ALLEGRO_ALIGN_CENTRE, "%s", entry.c_str());
+        al_draw_textf(
+                m_context->m_menu_font,
+                color,
+                cx, cy - height / 2,
+                ALLEGRO_ALIGN_CENTRE,
+                "%s", entry.c_str());
 
         y += height + 2.0 * config::MENU_PADDING + config::MENU_MARGIN;
 

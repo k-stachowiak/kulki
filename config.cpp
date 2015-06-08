@@ -36,7 +36,7 @@ int SCORE_FONT_SIZE;
 int SCORE_SHIFT_X;
 int SCORE_SHIFT_Y;
 
-int STREAK_MIN;
+int SERIE_MIN;
 
 double DEAL_PERIOD;
 int DEAL_COUNT_INIT;
@@ -187,7 +187,7 @@ void load()
     SCORE_SHIFT_X = load_int("SCORE_SHIFT_X");
     SCORE_SHIFT_Y = load_int("SCORE_SHIFT_Y");
 
-    STREAK_MIN = load_int("STREAK_MIN");
+    SERIE_MIN = load_int("SERIE_MIN");
 
     DEAL_PERIOD = load_real("DEAL_PERIOD");
     DEAL_COUNT_INIT = load_int("DEAL_COUNT_INIT");

@@ -109,7 +109,7 @@ struct Board {
 
         for (const auto& dir : directions) {
             auto s = m_find_streak_part(src, dir.first, dir.second);
-            if (static_cast<int>(s.size()) >= config::STREAK_MIN) {
+            if (static_cast<int>(s.size()) >= config::SERIE_MIN) {
                 std::copy(begin(s), end(s), out);
                 ++inserts;
             }

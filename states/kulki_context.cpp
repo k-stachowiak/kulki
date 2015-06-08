@@ -1,4 +1,5 @@
 #include <random>
+#include <set>
 
 #include "kulki_context.h"
 
@@ -23,7 +24,8 @@ KulkiContext::KulkiContext(
         ALLEGRO_FONT* score_font,
         ALLEGRO_FONT* gameover_font,
         ALLEGRO_FONT* menu_font,
-        ALLEGRO_BITMAP *ball_bmp) :
+        ALLEGRO_BITMAP *ball_bmp,
+        ALLEGRO_BITMAP *tile_bmp) :
     m_board { board },
     m_alive { alive },
     m_cursor_tile { cursor_tile },
@@ -31,6 +33,7 @@ KulkiContext::KulkiContext(
     m_gameover_font { gameover_font },
     m_menu_font { menu_font },
     m_ball_bmp { ball_bmp },
+    m_tile_bmp { tile_bmp },
     m_menu_state { this },
     m_deal_state { this },
     m_wait_ball_state { this },
@@ -46,18 +49,9 @@ KulkiContext::KulkiContext(
 
 void KulkiContext::gen_next_deal(int count)
 {
-    std::uniform_int_distribution<int> distr_x(0, m_board->m_width - 1);
-    std::uniform_int_distribution<int> distr_y(0, m_board->m_height - 1);
     std::uniform_int_distribution<int> distr_color(0, config::BALL_COLORS.size() - 1);
-
     for (int i = 0; i < count; ++i) {
-        int x, y;
-        do {
-            x = distr_x(engine);
-            y = distr_y(engine);
-        } while ((*m_board)(x, y) != config::EMPTY);
-        int color = distr_color(engine);
-        m_next_deal.emplace_back(x, y, color);
+        m_next_deal.push_back(distr_color(engine));
     }
 }
 
@@ -71,11 +65,25 @@ void KulkiContext::draw_field(
     double x1 = out_top_left.x, y1 = out_top_left.y;
     double x2 = out_bot_right.x, y2 = out_bot_right.y;
 
+    double image_w = al_get_bitmap_width(m_tile_bmp);
+    double image_h = al_get_bitmap_height(m_tile_bmp);
+    double xc = (x1 + x2) / 2.0;
+    double yc = (y1 + y2) / 2.0;
+
+    al_draw_rotated_bitmap(
+            m_tile_bmp,
+            image_w * 0.5,
+            image_h * 0.5,
+            xc, yc,
+            0.0,
+            0);
+
     if (fill) {
         al_draw_filled_rectangle(x1, y1, x2, y2, config::FIELD_COLOR);
     } else {
         al_draw_rectangle(x1, y1, x2, y2, config::FIELD_COLOR, config::FIELD_THICK);
     }
+
 }
 
 void KulkiContext::draw_ball(

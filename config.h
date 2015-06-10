@@ -42,6 +42,7 @@ extern int SCORE_SHIFT_X;
 extern int SCORE_SHIFT_Y;
 
 extern int SERIE_MIN;
+extern int COLOR_COUNT;
 
 extern double DEAL_PERIOD;
 extern int DEAL_COUNT_INIT;

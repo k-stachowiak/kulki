@@ -1,6 +1,7 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
+#include "resources.h"
 #include "kulki_state.h"
 #include "menu_state.h"
 #include "deal_state.h"
@@ -16,12 +17,13 @@ struct KulkiContext {
     Board* m_board;
     bool* m_alive;
 
-    std::pair<int, int>* m_cursor_tile;
-    ALLEGRO_FONT *m_score_font;
-    ALLEGRO_FONT *m_gameover_font;
+    ALLEGRO_FONT* m_gameover_font;
+    ALLEGRO_FONT* m_score_font;
     ALLEGRO_FONT *m_menu_font;
     ALLEGRO_BITMAP *m_ball_bmp;
     ALLEGRO_BITMAP *m_tile_bmp;
+    std::pair<int, int>* m_cursor_tile;
+    int m_ball_count;
 
     MenuState m_menu_state;
     DealState m_deal_state;
@@ -37,9 +39,12 @@ struct KulkiContext {
     int m_score;
     int m_streak;
 
-    KulkiContext(Board* board, bool* alive, std::pair<int, int>* cursor_tile,
-            ALLEGRO_FONT* score_font, ALLEGRO_FONT* gameover_font, ALLEGRO_FONT* menu_font,
-            ALLEGRO_BITMAP *ball_bmp, ALLEGRO_BITMAP *tile_bmp);
+    KulkiContext(
+        Board* board,
+        bool* alive,
+        Resources &resources,
+        std::pair<int, int>* cursor_tile,
+        int ball_count);
 
     void gen_next_deal(int count);
 

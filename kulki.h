@@ -14,6 +14,7 @@
 
 #include "board.h"
 #include "allegro.h"
+#include "resources.h"
 #include "kulki_state.h"
 #include "kulki_context.h"
 
@@ -21,11 +22,9 @@ class Kulki {
 
     bool m_alive;
     Board m_board;
-    ALLEGRO_FONT* m_gameover_font;
-    ALLEGRO_FONT* m_score_font;
-    ALLEGRO_FONT* m_menu_font;
-    ALLEGRO_BITMAP *m_ball_bmp;
-    ALLEGRO_BITMAP *m_tile_bmp;
+
+    Resources m_resources;
+    ALLEGRO_FONT *m_score_font;
 
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
@@ -100,27 +99,12 @@ public:
     Kulki() :
         m_alive { true },
         m_board { config::BOARD_W, config::BOARD_H },
-        m_gameover_font { al_load_font("data/prstartk.ttf", -config::GAMEOVER_FONT_SIZE, 0) },
-        m_score_font { al_load_font("data/prstartk.ttf", -config::SCORE_FONT_SIZE, 0) },
-        m_menu_font { al_load_font("data/prstartk.ttf", -config::MENU_FONT_SIZE, 0) },
-        m_ball_bmp { al_load_bitmap("data/ball2.png") },
-        m_tile_bmp { al_load_bitmap("data/tile.png") },
+        m_score_font { m_resources.get_font("data/prstartk.ttf", -config::SCORE_FONT_SIZE) },
         m_cursor_screen { -1, -1 },
         m_cursor_tile { -1, -1 },
-        m_state_context {
-            &m_board, &m_alive, &m_cursor_tile,
-            m_score_font, m_gameover_font, m_menu_font,
-            m_ball_bmp, m_tile_bmp
-        }
+        m_state_context { &m_board, &m_alive, m_resources, &m_cursor_tile, config::COLOR_COUNT }
     {
         m_state_context.set_state_menu();
-    }
-
-    ~Kulki()
-    {
-        al_destroy_font(m_gameover_font);
-        al_destroy_font(m_score_font);
-        al_destroy_font(m_menu_font);
     }
 
     void run(Allegro& al)

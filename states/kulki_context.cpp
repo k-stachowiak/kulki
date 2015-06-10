@@ -1,3 +1,4 @@
+#include <cassert>
 #include <random>
 #include <set>
 
@@ -20,20 +21,22 @@ namespace {
 KulkiContext::KulkiContext(
         Board* board,
         bool* alive,
+        Resources &resources,
         std::pair<int, int>* cursor_tile,
-        ALLEGRO_FONT* score_font,
-        ALLEGRO_FONT* gameover_font,
-        ALLEGRO_FONT* menu_font,
-        ALLEGRO_BITMAP *ball_bmp,
-        ALLEGRO_BITMAP *tile_bmp) :
+        int ball_count) :
+
     m_board { board },
     m_alive { alive },
+
+    m_gameover_font { resources.get_font("data/prstartk.ttf", -config::GAMEOVER_FONT_SIZE) },
+    m_score_font { resources.get_font("data/prstartk.ttf", -config::SCORE_FONT_SIZE) },
+    m_menu_font { resources.get_font("data/prstartk.ttf", -config::MENU_FONT_SIZE) },
+    m_ball_bmp { resources.get_bitmap("data/ball2.png") },
+    m_tile_bmp { resources.get_bitmap("data/tile.png") },
+
     m_cursor_tile { cursor_tile },
-    m_score_font { score_font },
-    m_gameover_font { gameover_font },
-    m_menu_font { menu_font },
-    m_ball_bmp { ball_bmp },
-    m_tile_bmp { tile_bmp },
+    m_ball_count { ball_count },
+
     m_menu_state { this },
     m_deal_state { this },
     m_wait_ball_state { this },
@@ -43,13 +46,16 @@ KulkiContext::KulkiContext(
     m_gameover_state { this },
     m_high_score_state { this },
     m_current_state { nullptr },
+
     m_score { 0 },
     m_streak { 0 }
-{}
+{
+    assert(m_ball_count <= static_cast<int>(config::BALL_COLORS.size()));
+}
 
 void KulkiContext::gen_next_deal(int count)
 {
-    std::uniform_int_distribution<int> distr_color(0, config::BALL_COLORS.size() - 1);
+    std::uniform_int_distribution<int> distr_color(0, m_ball_count - 1);
     for (int i = 0; i < count; ++i) {
         m_next_deal.push_back(distr_color(engine));
     }

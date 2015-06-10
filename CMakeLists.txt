@@ -18,18 +18,19 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Werror -g -O0")
 
 add_executable(kulki
-./model/high_score.cpp
-./states/high_score_state.cpp
-./states/game_over_state.cpp
-./states/wait_dest_state.cpp
-./states/move_state.cpp
-./states/wait_ball_state.cpp
-./states/kulki_context.cpp
-./states/score_state.cpp
-./states/menu_state.cpp
-./states/deal_state.cpp
-./config.cpp
-./main.cpp
-)
+    ./model/high_score.cpp
+    ./states/high_score_state.cpp
+    ./states/game_over_state.cpp
+    ./states/wait_dest_state.cpp
+    ./states/move_state.cpp
+    ./states/wait_ball_state.cpp
+    ./states/kulki_context.cpp
+    ./states/score_state.cpp
+    ./states/menu_state.cpp
+    ./states/deal_state.cpp
+    ./config.cpp
+    ./resources.cpp
+    ./main.cpp
+    )
 
 target_link_libraries(kulki m allegro_monolith moon)

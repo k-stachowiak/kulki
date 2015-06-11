@@ -3,32 +3,39 @@
 #ifndef HIGH_SCORE_H
 #define HIGH_SCORE_H
 
+#include <sstream>
 #include <string>
 #include <vector>
 
-static const int HIGH_SCORE_ENTRIES = 10;
+#include "config.h"
+
+struct HighScoreEntry {
+    int balls;
+    int score;
+    std::string name;
+
+    int str_len() const
+    {
+        std::stringstream ss;
+        ss << score;
+        std::string score_string;
+        ss >> score_string;
+        return name.size() + score_string.size();
+    }
+};
 
 class HighScore {
-public:
-    struct Entry {
-        std::string name;
-        int score;
-        int str_len() const;
-        friend bool operator==(const Entry& x, const Entry& y) {
-            return x.name == y.name && x.score == y.score;
-        }
-    };
-
-private:
-    std::string m_filename;
-    std::vector<Entry> m_entries;
+    std::vector<HighScoreEntry> m_entries;
 
 public:
-    HighScore(std::string filename);
-    ~HighScore();
-    std::vector<Entry> const& get_entries() const;
-    void add_entry(Entry const& e);
-    int insert_position(int score) const;
+    static HighScore load(const std::string& filename);
+    static void store(const std::string& filename, const HighScore& hs);
+
+    bool can_insert(int balls, int score) const;
+    std::vector<int> get_ball_counts() const;
+    std::vector<HighScoreEntry> get_entries_for_balls(int balls) const;
+
+    void add_entry(const HighScoreEntry& entry);
 };
 
 #endif

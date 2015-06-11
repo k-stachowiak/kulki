@@ -66,6 +66,7 @@ extern ALLEGRO_COLOR MENU_BG_COLOR_L;
 extern ALLEGRO_COLOR MENU_BG_COLOR_D;
 
 extern int HIGHSCORE_CHARACTERS;
+extern int HIGHSCORE_ENTRIES;
 
 void load();
 

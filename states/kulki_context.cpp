@@ -246,6 +246,6 @@ void KulkiContext::set_state_move(int src_x, int src_y, int dst_x, int dst_y, in
 
 void KulkiContext::set_state_high_score()
 {
-    m_high_score_state.reset(m_score);
+    m_high_score_state.reset(m_ball_count, m_score);
     m_current_state = &m_high_score_state;
 }

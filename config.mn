@@ -49,6 +49,7 @@
 (bind MENU_BG_COLOR_D [ 0.25 0.25 0.25 ])
 
 (bind HIGHSCORE_CHARACTERS 25)
+(bind HIGHSCORE_ENTRIES 10)
 
 # Gameplay
 (bind BOARD_W 9)

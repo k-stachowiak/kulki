@@ -3,10 +3,10 @@
 #include "high_score_state.h"
 #include "kulki_context.h"
 
-std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighScore::Entry>& entries)
+std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighScoreEntry>& entries)
 {
     std::vector<std::string> result;
-    for (const auto& e : m_high_score->get_entries()) {
+    for (const auto& e : entries) {
         std::stringstream ss;
         int padding = config::HIGHSCORE_CHARACTERS - e.str_len();
         ss << e.name << std::string(padding, '.') << e.score;
@@ -19,16 +19,20 @@ HighScoreState::HighScoreState(KulkiContext* context) :
     m_context { context }
 {}
 
-void HighScoreState::reset(int score)
+void HighScoreState::reset(int balls, int score)
 {
+    m_high_score = HighScore::load("high_score");
+    m_balls = balls;
     m_score = score;
-    m_high_score.reset(new HighScore { "high_score" });
-    if (m_high_score->insert_position(m_score) != -1) {
-        std::cout << "insert position = " << m_high_score->insert_position(m_score) << std::endl;
+
+    if (score != -1 && m_high_score.can_insert(m_balls, m_score)) {
         m_phase = HIGH_SCORE_INPUT;
-        m_input_name.clear();
+        m_name.clear();
     } else {
         m_phase = HIGH_SCORE_DISPLAY;
+        m_ball_counts = m_high_score.get_ball_counts();
+        m_period = 5.0;
+        m_timer = m_period;
     }
 }
 
@@ -41,38 +45,98 @@ void HighScoreState::on_key(int key, bool down)
     switch (m_phase) {
     case HIGH_SCORE_INPUT:
         if ((key >= ALLEGRO_KEY_A && key <= ALLEGRO_KEY_Z) || key == ALLEGRO_KEY_SPACE) {
-            m_input_name.push_back(key + 'A' - 1);
-        } else if (key == ALLEGRO_KEY_BACKSPACE) {
-            m_input_name.pop_back();
+            m_name.push_back(key + 'A' - 1);
+
+        } else if (key == ALLEGRO_KEY_BACKSPACE && !m_name.empty()) {
+            m_name.pop_back();
+
         } else if (key == ALLEGRO_KEY_ENTER) {
-            m_high_score->add_entry(HighScore::Entry { m_input_name, m_score });
+            m_high_score.add_entry({ m_balls, m_score, m_name });
             m_phase = HIGH_SCORE_DISPLAY;
+            m_ball_counts = m_high_score.get_ball_counts();
+            m_period = 5.0;
+            m_timer = m_period;
+
         } else if (key == ALLEGRO_KEY_ESCAPE) {
             m_phase = HIGH_SCORE_DISPLAY;
+            m_ball_counts = m_high_score.get_ball_counts();
+            m_period = 5.0;
+            m_timer = m_period;
         }
         break;
 
     case HIGH_SCORE_DISPLAY:
-        m_high_score.reset();
+        HighScore::store("high_score", m_high_score);
         m_context->set_state_gameover();
         break;
     }
+}
+
+void HighScoreState::tick(double dt)
+{
+    switch (m_phase) {
+    case HIGH_SCORE_INPUT:
+        break;
+
+    case HIGH_SCORE_DISPLAY:
+        m_timer -= dt;
+        if (m_timer <= 0) {
+            m_timer = m_period;
+            std::rotate(
+                begin(m_ball_counts),
+                begin(m_ball_counts) + 1,
+                end(m_ball_counts));
+        }
+        break;
+    }
+
 }
 
 void HighScoreState::draw(const glm::mat3&)
 {
     const double text_height = al_get_font_line_height(m_context->m_menu_font);
     const double line_height = text_height + 20;
-    const std::vector<std::string> outries = m_gen_outries(m_high_score->get_entries());
-    double y = config::SCREEN_H / 2 - (outries.size() / 2) * line_height;
-    for (decltype(outries)::size_type i = 0; i < outries.size(); ++i) {
-        if (m_phase == HIGH_SCORE_INPUT && i == (unsigned)m_high_score->insert_position(m_score)) {
-            al_draw_text(m_context->m_menu_font, al_map_rgb_f(1, 1, 1), config::SCREEN_W / 2, y, ALLEGRO_ALIGN_CENTRE, m_input_name.c_str());
-        } else {
-            const auto& outry = outries.at(i);
-            al_draw_text(m_context->m_menu_font, al_map_rgb_f(1, 1, 1), config::SCREEN_W / 2, y, ALLEGRO_ALIGN_CENTRE, outry.c_str());
+    double y;
+
+    switch (m_phase) {
+    case HIGH_SCORE_INPUT:
+        al_draw_textf(
+            m_context->m_menu_font,
+            al_map_rgb_f(1, 1, 1),
+            config::SCREEN_W / 2,
+            config::SCREEN_H / 2,
+            ALLEGRO_ALIGN_CENTRE,
+            "typename: %s",
+            m_name.c_str());
+        break;
+
+    case HIGH_SCORE_DISPLAY:
+
+        std::vector<std::string> outries = m_gen_outries(
+            m_high_score.get_entries_for_balls(
+                m_ball_counts.front()));
+        std::reverse(begin(outries), end(outries));
+
+        al_draw_textf(
+            m_context->m_menu_font,
+            al_map_rgb_f(1, 1, 1),
+            config::SCREEN_W / 2, 100.0,
+            ALLEGRO_ALIGN_CENTER,
+            "High score for %d balls",
+            m_ball_counts.front());
+
+        y = config::SCREEN_H / 2 - (outries.size() / 2) * line_height;
+
+        for (const std::string& outry : outries) {
+            al_draw_text(
+                m_context->m_menu_font,
+                al_map_rgb_f(1, 1, 1),
+                config::SCREEN_W / 2, y,
+                ALLEGRO_ALIGN_CENTRE,
+                outry.c_str());
+            y += line_height;
         }
-        y += line_height;
+        break;
     }
 }
 

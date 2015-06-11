@@ -1,82 +1,94 @@
 // Copyright (C) 2015 Krzysztof Stachowiak
 
+#include <set>
+#include <iostream>
 #include <fstream>
-#include <sstream>
 #include <algorithm>
 
 #include "high_score.h"
 
 namespace {
 
-    struct EntryComparer {
-        bool operator()(const HighScore::Entry& lhs, const HighScore::Entry& rhs) const
-        {
-            return lhs.score > rhs.score;
-        }
-    };
-
-}
-
-int HighScore::Entry::str_len() const
-{
-    int int_len;
-
+    bool high_score_entry_compare(
+            const HighScoreEntry &x,
+            const HighScoreEntry &y)
     {
-        std::stringstream ss;
-        ss << score;
-        int_len = ss.str().size();
-    }
-
-    return name.size() + int_len;
-}
-
-HighScore::HighScore(std::string filename) :
-        m_filename(filename)
-{
-    std::ifstream in(m_filename.c_str());
-    for (int i = 0; i < HIGH_SCORE_ENTRIES; ++i) {
-        Entry e;
-        char line[128] = { 0 };
-        in.getline(line, 128, '#');
-        e.name = line;
-        in.getline(line, 128, '\n');
-        {
-            std::stringstream ss(line);
-            ss >> e.score;
+        if (x.balls < y.balls) {
+            return true;
+        } else if (x.balls > y.balls) {
+            return false;
+        } else {
+            return x.score < y.score;
         }
-        m_entries.push_back(e);
     }
 
-    in.close();
-
-    std::sort(begin(m_entries), end(m_entries), EntryComparer());
 }
 
-HighScore::~HighScore()
+HighScore HighScore::load(const std::string& filename)
 {
-    std::ofstream out(m_filename.c_str(), std::ios_base::trunc);
-    for (const auto& e : m_entries) {
-        out << e.name << '#' << e.score << std::endl;
+    std::ifstream in { filename.c_str() };
+    if (!in.is_open()) {
+        std::cerr << "Failed opening high score file: \"" << filename << "\"" << std::endl;
+        exit(1);
     }
-    out.close();
-}
 
-std::vector<HighScore::Entry> const& HighScore::get_entries() const
-{
-    return m_entries;
-}
+    HighScore result;
 
-void HighScore::add_entry(Entry const& e)
-{
-    m_entries.back() = e;
-    std::sort(begin(m_entries), end(m_entries), EntryComparer());
-}
-
-int HighScore::insert_position(int score) const
-{
-    if (score <= m_entries.back().score) {
-        return -1;
+    HighScoreEntry entry;
+    while (in >> entry.balls >> entry.score >> entry.name) {
+        result.m_entries.push_back(entry);
     }
-    auto new_it = std::find_if(begin(m_entries), end(m_entries), [score](const Entry& x) { return x.score < score; });
-    return std::distance(begin(m_entries), new_it);
+
+    return result;
 }
+
+void HighScore::store(const std::string& filename, const HighScore& hs)
+{
+    std::ofstream out { filename.c_str(), std::ios_base::trunc };
+    if (!out.is_open()) {
+        std::cerr << "Failed opening high score file: \"" << filename << "\"" << std::endl;
+        exit(1);
+    }
+
+    for (const auto &entry : hs.m_entries) {
+        out << entry.balls << ' ' << entry.score << ' ' << entry.name << std::endl;
+    }
+}
+
+bool HighScore::can_insert(int balls, int score) const
+{
+    std::vector<HighScoreEntry> entries = get_entries_for_balls(balls);
+    if (static_cast<int>(entries.size()) < config::HIGHSCORE_ENTRIES) {
+        return true;
+    } else {
+        return score > entries.back().score;
+    }
+}
+
+std::vector<int> HighScore::get_ball_counts() const
+{
+    std::set<int> result;
+    for (const auto &entry: m_entries) {
+        result.insert(entry.balls);
+    }
+    return { begin(result), end(result) };
+}
+
+std::vector<HighScoreEntry> HighScore::get_entries_for_balls(int balls) const
+{
+    std::vector<HighScoreEntry> result;
+    std::copy_if(
+        begin(m_entries), end(m_entries),
+        std::back_inserter(result),
+        [balls](const HighScoreEntry &entry) {
+            return entry.balls == balls;
+        });
+    std::sort(begin(result), end(result), high_score_entry_compare);
+    return result;
+}
+
+void HighScore::add_entry(const HighScoreEntry &entry)
+{
+    m_entries.push_back(entry);
+}
+

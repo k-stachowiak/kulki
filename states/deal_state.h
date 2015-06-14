@@ -1,9 +1,13 @@
 #ifndef DEAL_STATE_H
 #define DEAL_STATE_H
 
-#include "kulki_state.h"
+#include <vector>
 
-class DealState : public KulkiState {
+#include "state_node.h"
+
+struct KulkiContext;
+
+class DealState : public StateNode {
 
     KulkiContext* const m_context;
 
@@ -17,7 +21,7 @@ public:
     DealState(KulkiContext* context);
     void reset(double time);
     void tick(double dt) override;
-    void draw(const glm::mat3& transf) override;
+    void draw(double weight) override;
 };
 
 #endif

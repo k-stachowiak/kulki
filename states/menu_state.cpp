@@ -1,4 +1,6 @@
-#include "kulki_state.h"
+#include <allegro5/allegro_primitives.h>
+
+#include "state_node.h"
 #include "kulki_context.h"
 #include "menu_state.h"
 
@@ -27,7 +29,7 @@ void MenuState::m_select()
     const std::string& entry = m_entries[m_current];
 
     if (entry == "New game") {
-        m_context->m_board->clear();
+        m_context->m_board.clear();
         m_context->m_score = 0;
         m_context->gen_next_deal(config::DEAL_COUNT_INIT);
         m_context->set_state_deal();
@@ -37,7 +39,7 @@ void MenuState::m_select()
         m_context->set_state_high_score();
 
     } else if (entry == "Exit") {
-        *m_context->m_alive = false;
+        m_context->m_alive = false;
 
     } else {
         throw std::runtime_error("Incogerent menu configuration");
@@ -66,11 +68,11 @@ void MenuState::on_button(int button, bool down)
 
 void MenuState::on_cursor(int x, int y)
 {
-    m_context->m_cursor_tile->first = x;
-    m_context->m_cursor_tile->second = y;
+    m_context->m_cursor_tile.first = x;
+    m_context->m_cursor_tile.second = y;
 }
 
-void MenuState::draw(const glm::mat3&)
+void MenuState::draw(double)
 {
     const double height = al_get_font_line_height(m_context->m_menu_font);
     const double x = double(config::SCREEN_W - m_width) / 2.0;
@@ -99,8 +101,8 @@ void MenuState::draw(const glm::mat3&)
 
         y += height + 2.0 * config::MENU_PADDING + config::MENU_MARGIN;
 
-        if (m_context->m_cursor_tile->first > x1 && m_context->m_cursor_tile->first < x2 &&
-            m_context->m_cursor_tile->second > y1 && m_context->m_cursor_tile->second < y2) {
+        if (m_context->m_cursor_tile.first > x1 && m_context->m_cursor_tile.first < x2 &&
+            m_context->m_cursor_tile.second > y1 && m_context->m_cursor_tile.second < y2) {
             m_current = i;
         }
     }

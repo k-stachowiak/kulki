@@ -13,9 +13,9 @@ void ScoreState::reset(double time, double cx, double cy, int incr)
     m_incr = incr;
 }
 
-void ScoreState::draw(const glm::mat3& transf)
+void ScoreState::draw(double)
 {
-    glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * transf;
+    glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->m_current_transform();
     al_draw_textf(
         m_context->m_score_font, config::SCORE_COLOR,
         text_center.x, text_center.y,

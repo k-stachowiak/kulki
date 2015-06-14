@@ -38,15 +38,15 @@ void WaitBallState::on_key(int key, bool down)
 
 void WaitBallState::on_button(int button, bool down)
 {
-    int tx = m_context->m_cursor_tile->first;
-    int ty = m_context->m_cursor_tile->second;
-    if (m_context->m_board->has(tx, ty) && (*m_context->m_board)(tx, ty) != config::EMPTY) {
+    int tx = m_context->m_cursor_tile.first;
+    int ty = m_context->m_cursor_tile.second;
+    if (m_context->m_board.has(tx, ty) && m_context->m_board(tx, ty) != config::EMPTY) {
         m_context->set_state_wait_dest(tx, ty);
     }
 }
 
 
-void WaitBallState::draw(const glm::mat3& transf)
+void WaitBallState::draw(double)
 {
     if (m_usure_phase) {
         al_draw_text(

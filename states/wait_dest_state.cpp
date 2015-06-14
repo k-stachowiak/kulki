@@ -19,7 +19,7 @@ void WaitDestState::tick(double dt)
     m_time = fmod(m_time, config::BUMP_PERIOD);
 }
 
-void WaitDestState::draw(const glm::mat3& transf)
+void WaitDestState::draw(double)
 {
     double bmp_factor = double(m_time) / config::BUMP_PERIOD * 3.14;
     double sqz_factor = double(m_time) / config::BUMP_PERIOD * 2.0 * 3.14;
@@ -29,7 +29,7 @@ void WaitDestState::draw(const glm::mat3& transf)
 
     double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
-    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, transf);
+    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, m_context->m_current_transform());
 }
 
 void WaitDestState::on_key(int key, bool down)
@@ -41,12 +41,12 @@ void WaitDestState::on_key(int key, bool down)
 
 void WaitDestState::on_button(int button, bool down)
 {
-    int tx = m_context->m_cursor_tile->first;
-    int ty = m_context->m_cursor_tile->second;
+    int tx = m_context->m_cursor_tile.first;
+    int ty = m_context->m_cursor_tile.second;
 
-    if ((tx == m_src_x && ty == m_src_y) || !m_context->m_board->has(tx, ty)) {
+    if ((tx == m_src_x && ty == m_src_y) || !m_context->m_board.has(tx, ty)) {
         m_context->reset_state_wait_ball(m_src_x, m_src_y, m_color);
-    } else if ((*m_context->m_board)(tx, ty) != config::EMPTY) {
+    } else if (m_context->m_board(tx, ty) != config::EMPTY) {
         m_context->reset_state_wait_dest(tx, ty);
     } else {
         m_context->set_state_move(m_src_x, m_src_y, tx, ty, m_color);

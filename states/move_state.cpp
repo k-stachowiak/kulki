@@ -22,12 +22,12 @@ void MoveState::tick(double dt)
     m_path.pop_front();
 
     if (m_path.size() == 1) {
-        (*m_context->m_board)(m_dst_x, m_dst_y) = m_color;
-        m_context->set_state_score({ { m_dst_x, m_dst_y } }, KulkiState::Enum::DEAL);
+        m_context->m_board(m_dst_x, m_dst_y) = m_color;
+        m_context->set_state_score({ { m_dst_x, m_dst_y } }, true);
     }
 }
 
-void MoveState::draw(const glm::mat3& transf)
+void MoveState::draw(double)
 {
     double x1 = m_path[0].first;
     double y1 = m_path[0].second;
@@ -43,6 +43,6 @@ void MoveState::draw(const glm::mat3& transf)
 
     double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
-    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, transf);
+    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, m_context->m_current_transform());
 }
 

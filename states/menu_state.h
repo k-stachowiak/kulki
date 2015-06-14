@@ -1,9 +1,13 @@
 #ifndef MENU_STATE_H
 #define MENU_STATE_H
 
-#include "kulki_state.h"
+#include <vector>
 
-class MenuState : public KulkiState {
+#include "kulki_context.h"
+
+struct KulkiContext;
+
+class MenuState : public StateNode {
 
     KulkiContext* const m_context;
 
@@ -19,7 +23,7 @@ public:
     void reset();
     void on_button(int button, bool down) override;
     void on_cursor(int x, int y) override;
-    void draw(const glm::mat3&) override;
+    void draw(double weight) override;
 };
 
 

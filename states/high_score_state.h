@@ -1,9 +1,12 @@
 #ifndef HIGH_SCORE_STATE_H
 #define HIGH_SCORE_STATE_H
 
-#include "kulki_state.h"
+#include "state_node.h"
+#include "high_score.h"
 
-class HighScoreState : public KulkiState {
+struct KulkiContext;
+
+class HighScoreState : public StateNode {
 
     KulkiContext* const m_context;
 
@@ -29,7 +32,7 @@ public:
     void reset(int balls, int score);
     void on_key(int key, bool down) override;
     void tick(double dt) override;
-    void draw(const glm::mat3&) override;
+    void draw(double) override;
 };
 
 #endif

@@ -1,9 +1,9 @@
 #ifndef SCORE_STATE_H
 #define SCORE_STATE_H
 
-#include "kulki_state.h"
+#include "state_node.h"
 
-class ScoreState : public KulkiState {
+class ScoreState : public StateNode {
 
     KulkiContext* const m_context;
 
@@ -15,7 +15,7 @@ public:
     ScoreState(KulkiContext* context);
     void reset(double time, double cx, double cy, int incr);
     void tick(double dt) override;
-    void draw(const glm::mat3& transf) override;
+    void draw(double weight) override;
 };
 
 #endif

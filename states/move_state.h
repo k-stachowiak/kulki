@@ -1,9 +1,13 @@
 #ifndef MOVE_STATE_H
 #define MOVE_STATE_H
 
-#include "kulki_state.h"
+#include <deque>
 
-class MoveState : public KulkiState {
+#include "state_node.h"
+
+struct KulkiContext;
+
+class MoveState : public StateNode {
 
     KulkiContext* const m_context;
 
@@ -16,7 +20,7 @@ public:
     MoveState(KulkiContext* context);
     void reset(std::deque<std::pair<int, int>> path, double time, int dst_x, int dst_y, int color);
     void tick(double dt) override;
-    void draw(const glm::mat3& transf) override;
+    void draw(double weight) override;
 };
 
 #endif

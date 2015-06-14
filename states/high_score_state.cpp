@@ -92,7 +92,7 @@ void HighScoreState::tick(double dt)
 
 }
 
-void HighScoreState::draw(const glm::mat3&)
+void HighScoreState::draw(double)
 {
     const double text_height = al_get_font_line_height(m_context->m_menu_font);
     const double line_height = text_height + 20;

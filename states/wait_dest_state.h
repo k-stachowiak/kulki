@@ -1,9 +1,11 @@
 #ifndef WAIT_DEST_STATE_H
 #define WAIT_DEST_STATE_H
 
-#include "kulki_state.h"
+#include "state_node.h"
 
-class WaitDestState : public KulkiState {
+struct KulkiContext;
+
+class WaitDestState : public StateNode {
     KulkiContext* const m_context;
 
     int m_src_x, m_src_y;
@@ -19,7 +21,7 @@ public:
     int get_color() const { return m_color; }
 
     void tick(double dt) override;
-    void draw(const glm::mat3& transf) override;
+    void draw(double weight) override;
     void on_key(int key, bool down) override;
     void on_button(int button, bool down) override;
 };

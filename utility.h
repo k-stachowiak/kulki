@@ -4,6 +4,7 @@
 #define UTILITY_H
 
 #include <utility>
+#include <glm/glm.hpp>
 
 namespace std {
     template <> struct hash<std::pair<int, int>> {

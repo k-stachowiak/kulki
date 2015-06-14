@@ -23,7 +23,7 @@ void GameoverState::tick(double dt)
     m_index = (m_index + 1) % config::BALL_COLORS.size();
 }
 
-void GameoverState::draw(const glm::mat3& transf)
+void GameoverState::draw(double)
 {
     al_draw_text(
         m_context->m_gameover_font, config::BALL_COLORS[m_index],

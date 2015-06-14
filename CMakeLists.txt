@@ -28,6 +28,7 @@ add_executable(kulki
     ./states/score_state.cpp
     ./states/menu_state.cpp
     ./states/deal_state.cpp
+    ./platform.cpp
     ./config.cpp
     ./resources.cpp
     ./main.cpp

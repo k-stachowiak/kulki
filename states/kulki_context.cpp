@@ -216,6 +216,11 @@ void KulkiContext::set_state_wait_ball()
 
 void KulkiContext::reset_state_wait_ball(int src_x, int src_y, int color)
 {
+    if (m_board.free_fields() == 0) {
+        set_state_gameover();
+        return;
+    }
+
     m_board(src_x, src_y) = color;
     set_state_wait_ball();
 }
@@ -235,7 +240,7 @@ void KulkiContext::reset_state_wait_dest(int src_x, int src_y)
 
 void KulkiContext::set_state_deal()
 {
-    if (m_board.free_fields() <= config::DEAL_COUNT_INGAME) {
+    if (m_board.free_fields() < config::DEAL_COUNT_INGAME) {
         set_state_gameover();
         return;
     }

@@ -35,6 +35,7 @@ void ScoreState::reset(const std::vector<std::pair<int, int>>& changes, bool nex
     m_context->m_score += score_incr;
 
     // Setup state for further phase.
+    m_next_deal = false;
     m_cx = double(x_sum) / double(scored.size()) + 0.5;
     m_cy = double(y_sum) / double(scored.size()) + 0.5;
     m_incr = score_incr;

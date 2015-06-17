@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "config.h"
 #include "moon.h"
@@ -65,6 +66,9 @@ int HIGHSCORE_ENTRIES;
 
 namespace {
 
+struct MoonContextDeleter { void operator()(MoonContext *ctx) { mn_destroy(ctx); } };
+std::unique_ptr<MoonContext, MoonContextDeleter> moon_context;
+
 ALLEGRO_COLOR parse_color(MoonValue *value, const std::string& symbol)
 {
     if ((value->type != MN_ARRAY) ||
@@ -82,7 +86,7 @@ ALLEGRO_COLOR parse_color(MoonValue *value, const std::string& symbol)
 
 double load_real(const std::string& symbol)
 {
-    MoonValue *value = mn_exec_command(symbol.c_str());
+    MoonValue *value = mn_exec_command(moon_context.get(), symbol.c_str());
     if (value->type != MN_REAL) {
         std::cerr << "Type error while reading config value " << symbol << std::endl;
         exit(1);
@@ -94,7 +98,7 @@ double load_real(const std::string& symbol)
 
 int load_int(const std::string& symbol)
 {
-    MoonValue *value = mn_exec_command(symbol.c_str());
+    MoonValue *value = mn_exec_command(moon_context.get(), symbol.c_str());
     if (value->type != MN_INT) {
         std::cerr << "Type error while reading config value " << symbol << std::endl;
         exit(1);
@@ -106,7 +110,7 @@ int load_int(const std::string& symbol)
 
 ALLEGRO_COLOR load_color(const std::string& symbol)
 {
-    MoonValue *value = mn_exec_command(symbol.c_str());
+    MoonValue *value = mn_exec_command(moon_context.get(), symbol.c_str());
     ALLEGRO_COLOR result = parse_color(value, symbol);
     mn_dispose(value);
     return result;
@@ -114,7 +118,7 @@ ALLEGRO_COLOR load_color(const std::string& symbol)
 
 std::vector<ALLEGRO_COLOR> load_color_vector(const std::string& symbol)
 {
-    MoonValue *value = mn_exec_command(symbol.c_str());
+    MoonValue *value = mn_exec_command(moon_context.get(), symbol.c_str());
     if (value->type != MN_ARRAY) {
         std::cerr << "Type error while reading config value " << symbol << std::endl;
         exit(1);
@@ -131,7 +135,7 @@ std::vector<ALLEGRO_COLOR> load_color_vector(const std::string& symbol)
 
 glm::vec3 load_vec3(const std::string& symbol)
 {
-    MoonValue *value = mn_exec_command(symbol.c_str());
+    MoonValue *value = mn_exec_command(moon_context.get(), symbol.c_str());
     if ((value->type != MN_ARRAY) ||
         (value->data.compound == NULL || value->data.compound->type != MN_REAL) ||
         (value->data.compound->next == NULL || value->data.compound->next->type != MN_REAL) ||
@@ -151,9 +155,9 @@ glm::vec3 load_vec3(const std::string& symbol)
 
 void load()
 {
-    mn_init();
+    moon_context.reset(mn_create());
 
-    if (!mn_exec_file("config.mn")) {
+    if (!mn_exec_file(moon_context.get(), "config.mn")) {
         std::cerr << "Failed loading configuration file." << std::endl;
         std::cerr << "Error message: " << mn_error_message() << std::endl;
         exit(1);

@@ -41,6 +41,10 @@ void WaitDestState::on_key(int key, bool down)
 
 void WaitDestState::on_button(int button, bool down)
 {
+    if (!down) {
+        return;
+    }
+
     int tx = m_context->m_cursor_tile.first;
     int ty = m_context->m_cursor_tile.second;
 

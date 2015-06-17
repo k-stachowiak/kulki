@@ -10,10 +10,11 @@ class ScoreState : public StateNode {
     double m_time;
     double m_cx, m_cy;
     int m_incr;
+    bool m_next_deal;
 
 public:
     ScoreState(KulkiContext* context);
-    void reset(double time, double cx, double cy, int incr);
+    void reset(const std::vector<std::pair<int, int>>& changes, bool next_deal);
     void tick(double dt) override;
     void draw(double weight) override;
 };

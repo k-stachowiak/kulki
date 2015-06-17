@@ -236,7 +236,7 @@ void KulkiContext::reset_state_wait_dest(int src_x, int src_y)
 void KulkiContext::set_state_deal()
 {
     if (m_board.free_fields() <= config::DEAL_COUNT_INGAME) {
-        set_state_high_score();
+        set_state_gameover();
         return;
     }
 
@@ -252,41 +252,7 @@ void KulkiContext::set_state_gameover()
 
 void KulkiContext::set_state_score(const std::vector<std::pair<int, int>>& changes, bool next_deal)
 {
-    std::unordered_set<std::pair<int, int>> scored;
-    bool success = false;
-
-    for (const auto& p : changes) {
-        success |= m_board.find_streak(p, std::inserter(scored, begin(scored)));
-    }
-
-    if (success) {
-        ++m_streak;
-
-    } else {
-        m_streak = 0;
-        if (next_deal) {
-            set_state_deal();
-        } else {
-            set_state_wait_ball();
-        }
-    }
-
-    int x_sum = 0, y_sum = 0;
-    for (const auto& p : scored) {
-        m_board(p.first, p.second) = config::EMPTY;
-        x_sum += p.first;
-        y_sum += p.second;
-    }
-
-    int score_incr = scored.size() * m_streak;
-    m_score += score_incr;
-
-    m_score_state.reset(
-            config::SCORE_PERIOD,
-            double(x_sum) / double(scored.size()) + 0.5,
-            double(y_sum) / double(scored.size()) + 0.5,
-            score_incr);
-
+    m_score_state.reset(changes, next_deal);
     m_current_state = &m_score_state;
 }
 

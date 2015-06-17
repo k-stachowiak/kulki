@@ -35,6 +35,6 @@ void GameoverState::draw(double)
 void GameoverState::on_key(int key, bool down)
 {
     if (down) {
-        m_context->set_state_menu();
+        m_context->set_state_high_score();
     }
 }

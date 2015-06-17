@@ -57,17 +57,12 @@ void HighScoreState::on_key(int key, bool down)
             m_period = 5.0;
             m_timer = m_period;
 
-        } else if (key == ALLEGRO_KEY_ESCAPE) {
-            m_phase = HIGH_SCORE_DISPLAY;
-            m_ball_counts = m_high_score.get_ball_counts();
-            m_period = 5.0;
-            m_timer = m_period;
         }
         break;
 
     case HIGH_SCORE_DISPLAY:
         HighScore::store("high_score", m_high_score);
-        m_context->set_state_gameover();
+        m_context->set_state_menu();
         break;
     }
 }

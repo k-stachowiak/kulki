@@ -22,7 +22,7 @@ void WaitBallState::on_key(int key, bool down)
         break;
 
     case ALLEGRO_KEY_Y:
-        m_context->set_state_high_score();
+        m_context->set_state_gameover();
         break;
 
     case ALLEGRO_KEY_N:

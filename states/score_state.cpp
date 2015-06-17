@@ -43,6 +43,8 @@ void ScoreState::reset(const std::vector<std::pair<int, int>>& changes, bool nex
 
 void ScoreState::draw(double)
 {
+    if (m_time <= 0) return;
+
     glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->m_current_transform();
     al_draw_textf(
         m_context->m_score_font, config::SCORE_COLOR,

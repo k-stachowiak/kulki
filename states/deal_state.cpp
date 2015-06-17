@@ -48,7 +48,6 @@ void DealState::tick(double dt)
     m_positions.emplace_back(m_current_x, m_current_y);
 
     if (m_context->m_next_deal.empty()) {
-        std::cout << "Deal list is empty" << std::endl;
         m_context->gen_next_deal(config::DEAL_COUNT_INGAME);
         m_context->set_state_score(m_positions, false);
     } else {

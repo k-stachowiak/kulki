@@ -15,6 +15,10 @@
 
 struct KulkiContext : public StateNode {
 
+    KulkiConfig &m_config;
+
+    int m_empty_field;
+
     Resources m_resources;
     Board m_board;
     bool m_alive;
@@ -26,7 +30,22 @@ struct KulkiContext : public StateNode {
     ALLEGRO_BITMAP *m_tile_bmp;
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
+
+    std::vector<ALLEGRO_COLOR> m_ball_colors;
     int m_ball_count;
+
+    int m_screen_w, m_screen_h;
+    double m_field_w;
+    double m_board_shift_x, m_board_shift_y;
+    ALLEGRO_COLOR m_field_color;
+    double m_field_thick;
+    glm::vec3 m_ball_color_filter;
+    double m_field_margin;
+    double m_ball_radius;
+    double m_ball_jump_h;
+    ALLEGRO_COLOR m_bg_color;
+    ALLEGRO_COLOR m_score_color;
+    int m_score_shift_x, m_score_shift_y;
 
     MenuState m_menu_state;
     DealState m_deal_state;
@@ -42,7 +61,7 @@ struct KulkiContext : public StateNode {
     int m_score;
     int m_streak;
 
-    KulkiContext();
+    KulkiContext(KulkiConfig &config);
 
     void gen_next_deal(int count);
 

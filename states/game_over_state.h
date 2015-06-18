@@ -8,6 +8,9 @@ struct KulkiContext;
 class GameoverState : public StateNode {
     KulkiContext* const m_context;
 
+    double m_period;
+    int m_gameover_shift_x, m_gameover_shift_y;
+
     double m_time;
     int m_index;
 

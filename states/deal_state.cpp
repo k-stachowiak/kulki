@@ -20,7 +20,7 @@ void DealState::deal_next()
     do {
         new_x = distr_x(engine);
         new_y = distr_y(engine);
-    } while (m_context->m_board(new_x, new_y) != config::EMPTY);
+    } while (m_context->m_board(new_x, new_y) != m_context->m_empty_field);
 
     m_current_x = new_x;
     m_current_y = new_y;
@@ -28,7 +28,8 @@ void DealState::deal_next()
 }
 
 DealState::DealState(KulkiContext* context) :
-    m_context { context }
+    m_context { context },
+    m_period { m_context->m_config.get_real("DEAL_PERIOD") }
 {}
 
 void DealState::reset(double time)
@@ -42,13 +43,13 @@ void DealState::reset(double time)
 void DealState::tick(double dt)
 {
     if ((m_time -= dt) > 0) return;
-    else m_time = config::DEAL_PERIOD;
+    else m_time = m_period;
 
     m_context->m_board(m_current_x, m_current_y) = m_current_color;
     m_positions.emplace_back(m_current_x, m_current_y);
 
     if (m_context->m_next_deal.empty()) {
-        m_context->gen_next_deal(config::DEAL_COUNT_INGAME);
+        m_context->gen_next_deal(m_context->m_config.get_integer("DEAL_COUNT_INGAME"));
         m_context->set_state_score(m_positions, false);
     } else {
         deal_next();
@@ -57,9 +58,9 @@ void DealState::tick(double dt)
 
 void DealState::draw(double)
 {
-    double squeeze = 1.0 - double(m_time) / config::DEAL_PERIOD;
+    double squeeze = 1.0 - double(m_time) / m_period;
     double x = double(m_current_x) + 0.5;
     double y = double(m_current_y) + 0.5;
-    m_context->draw_ball(x, y, m_current_color, config::BALL_RADIUS, squeeze, m_context->m_current_transform());
+    m_context->draw_ball(x, y, m_current_color, m_context->m_ball_radius, squeeze, m_context->m_current_transform());
 }
 

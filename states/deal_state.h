@@ -11,6 +11,7 @@ class DealState : public StateNode {
 
     KulkiContext* const m_context;
 
+    double m_period;
     int m_current_x, m_current_y, m_current_color;
     double m_time;
     std::vector<std::pair<int, int>> m_positions;

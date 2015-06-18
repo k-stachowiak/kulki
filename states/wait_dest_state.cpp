@@ -2,7 +2,8 @@
 #include "kulki_context.h"
 
 WaitDestState::WaitDestState(KulkiContext* context) :
-    m_context { context }
+    m_context { context },
+    m_bump_period { m_context->m_config.get_real("BUMP_PERIOD") }
 {}
 
 void WaitDestState::reset(int src_x, int src_y, int color, double time)
@@ -16,20 +17,20 @@ void WaitDestState::reset(int src_x, int src_y, int color, double time)
 void WaitDestState::tick(double dt)
 {
     m_time += dt;
-    m_time = fmod(m_time, config::BUMP_PERIOD);
+    m_time = fmod(m_time, m_bump_period);
 }
 
 void WaitDestState::draw(double)
 {
-    double bmp_factor = double(m_time) / config::BUMP_PERIOD * 3.14;
-    double sqz_factor = double(m_time) / config::BUMP_PERIOD * 2.0 * 3.14;
+    double bmp_factor = double(m_time) / m_bump_period * 3.14;
+    double sqz_factor = double(m_time) / m_bump_period * 2.0 * 3.14;
 
     double x = double(m_src_x) + 0.5;
-    double y = double(m_src_y) + 0.5 - sin(bmp_factor) * config::BALL_JUMP_H;
+    double y = double(m_src_y) + 0.5 - sin(bmp_factor) * m_context->m_ball_jump_h;
 
     double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
-    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, m_context->m_current_transform());
+    m_context->draw_ball(x, y, m_color, m_context->m_ball_radius, squeeze, m_context->m_current_transform());
 }
 
 void WaitDestState::on_key(int key, bool down)
@@ -50,7 +51,7 @@ void WaitDestState::on_button(int button, bool down)
 
     if ((tx == m_src_x && ty == m_src_y) || !m_context->m_board.has(tx, ty)) {
         m_context->reset_state_wait_ball(m_src_x, m_src_y, m_color);
-    } else if (m_context->m_board(tx, ty) != config::EMPTY) {
+    } else if (m_context->m_board(tx, ty) != m_context->m_empty_field) {
         m_context->reset_state_wait_dest(tx, ty);
     } else {
         m_context->set_state_move(m_src_x, m_src_y, tx, ty, m_color);

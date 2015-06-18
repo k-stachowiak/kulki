@@ -6,9 +6,18 @@
 
 int main()
 {
-    config::load();
-    Platform platform;
-    KulkiContext kulki_ctx;
+    KulkiConfig config("config.mn");
+
+    Platform platform {
+        config.get_integer("SCREEN_W"),
+        config.get_integer("SCREEN_H"),
+        config.get_real("FPS"),
+        config.get_real("MAX_FRAME_TIME"),
+        config.get_real("FRAME_REST")
+    };
+
+    KulkiContext kulki_ctx(config);
+
     platform.realtime_loop(kulki_ctx);
 }
 

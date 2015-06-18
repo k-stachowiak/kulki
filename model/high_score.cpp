@@ -24,7 +24,7 @@ namespace {
 
 }
 
-HighScore HighScore::load(const std::string& filename)
+HighScore HighScore::load(const std::string& filename, int max_entries)
 {
     std::ifstream in { filename.c_str() };
     if (!in.is_open()) {
@@ -33,7 +33,7 @@ HighScore HighScore::load(const std::string& filename)
     }
 
     HighScore result;
-
+    result.m_max_entries = max_entries;
     HighScoreEntry entry;
     while (in >> entry.balls >> entry.score >> entry.name) {
         result.m_entries.push_back(entry);
@@ -58,7 +58,7 @@ void HighScore::store(const std::string& filename, const HighScore& hs)
 bool HighScore::can_insert(int balls, int score) const
 {
     std::vector<HighScoreEntry> entries = get_entries_for_balls(balls);
-    if (static_cast<int>(entries.size()) < config::HIGHSCORE_ENTRIES) {
+    if (static_cast<int>(entries.size()) < m_max_entries) {
         return true;
     } else {
         return score > entries.back().score;

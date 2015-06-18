@@ -2,7 +2,9 @@
 #include "score_state.h"
 
 ScoreState::ScoreState(KulkiContext* context) :
-    m_context { context }
+    m_context { context },
+    m_period { m_context->m_config.get_real("SCORE_PERIOD") },
+    m_score_color(m_context->m_config.get_color("SCORE_COLOR"))
 {}
 
 void ScoreState::reset(const std::vector<std::pair<int, int>>& changes, bool next_deal)
@@ -11,8 +13,11 @@ void ScoreState::reset(const std::vector<std::pair<int, int>>& changes, bool nex
     std::unordered_set<std::pair<int, int>> scored;
     bool success = false;
 
-    for (const auto& p : changes) {
-        success |= m_context->m_board.find_streak(p, std::inserter(scored, begin(scored)));
+    for (const auto& change : changes) {
+        success |= m_context->m_board.find_streak(
+                change,
+                std::inserter(scored, begin(scored)),
+                m_context->m_config.get_integer("SERIE_MIN"));
     }
 
     if (!success) {
@@ -22,11 +27,11 @@ void ScoreState::reset(const std::vector<std::pair<int, int>>& changes, bool nex
     }
 
     ++m_context->m_streak;
-    m_time = config::SCORE_PERIOD;
+    m_time = m_period;
 
     int x_sum = 0, y_sum = 0;
     for (const auto& p : scored) {
-        m_context->m_board(p.first, p.second) = config::EMPTY;
+        m_context->m_board(p.first, p.second) = m_context->m_empty_field;
         x_sum += p.first;
         y_sum += p.second;
     }
@@ -47,7 +52,7 @@ void ScoreState::draw(double)
 
     glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->m_current_transform();
     al_draw_textf(
-        m_context->m_score_font, config::SCORE_COLOR,
+        m_context->m_score_font, m_score_color,
         text_center.x, text_center.y,
         ALLEGRO_ALIGN_CENTRE,
         "+%d", m_incr);

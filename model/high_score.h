@@ -25,10 +25,11 @@ struct HighScoreEntry {
 };
 
 class HighScore {
+    int m_max_entries;
     std::vector<HighScoreEntry> m_entries;
 
 public:
-    static HighScore load(const std::string& filename);
+    static HighScore load(const std::string& filename, int max_entries);
     static void store(const std::string& filename, const HighScore& hs);
 
     bool can_insert(int balls, int score) const;

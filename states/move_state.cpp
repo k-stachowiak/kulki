@@ -2,7 +2,8 @@
 #include "kulki_context.h"
 
 MoveState::MoveState(KulkiContext* context) :
-    m_context { context }
+    m_context { context },
+    m_move_period { m_context->m_config.get_real("MOVE_PERIOD") }
 {}
 
 void MoveState::reset(std::deque<std::pair<int, int>> path, double time, int dst_x, int dst_y, int color)
@@ -17,7 +18,7 @@ void MoveState::reset(std::deque<std::pair<int, int>> path, double time, int dst
 void MoveState::tick(double dt)
 {
     if ((m_time -= dt) > 0) return;
-    else m_time = config::MOVE_PERIOD;
+    else m_time = m_move_period;
 
     m_path.pop_front();
 
@@ -34,15 +35,15 @@ void MoveState::draw(double)
     double x2 = m_path[1].first;
     double y2 = m_path[1].second;
 
-    double mv_factor = double(m_time) / config::MOVE_PERIOD;
-    double bmp_factor = double(m_time) / config::MOVE_PERIOD * 3.14;
-    double sqz_factor = double(m_time) / config::MOVE_PERIOD * 2.0 * 3.14;
+    double mv_factor = double(m_time) / m_move_period;
+    double bmp_factor = double(m_time) / m_move_period * 3.14;
+    double sqz_factor = double(m_time) / m_move_period * 2.0 * 3.14;
 
     double x = x1 * mv_factor + x2 * (1.0 - mv_factor) + 0.5;
-    double y = y1 * mv_factor + y2 * (1.0 - mv_factor) + 0.5 - sin(bmp_factor) * config::BALL_JUMP_H;
+    double y = y1 * mv_factor + y2 * (1.0 - mv_factor) + 0.5 - sin(bmp_factor) * m_context->m_ball_jump_h;
 
     double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
-    m_context->draw_ball(x, y, m_color, config::BALL_RADIUS, squeeze, m_context->m_current_transform());
+    m_context->draw_ball(x, y, m_color, m_context->m_ball_radius, squeeze, m_context->m_current_transform());
 }
 

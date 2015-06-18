@@ -20,20 +20,44 @@ namespace {
     std::mt19937 engine { device() };
 }
 
-KulkiContext::KulkiContext() :
+KulkiContext::KulkiContext(KulkiConfig &config) :
 
-    m_board { config::BOARD_W, config::BOARD_H },
+    m_config { config },
+
+    m_empty_field { config.get_integer("EMPTY") },
+
+    m_board {
+        config.get_integer("BOARD_W"),
+        config.get_integer("BOARD_H"),
+        m_empty_field
+    },
     m_alive { true },
 
-    m_gameover_font { m_resources.get_font("data/prstartk.ttf", -config::GAMEOVER_FONT_SIZE) },
-    m_score_font { m_resources.get_font("data/prstartk.ttf", -config::SCORE_FONT_SIZE) },
-    m_menu_font { m_resources.get_font("data/prstartk.ttf", -config::MENU_FONT_SIZE) },
+    m_gameover_font { m_resources.get_font("data/prstartk.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
+    m_score_font { m_resources.get_font("data/prstartk.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
+    m_menu_font { m_resources.get_font("data/prstartk.ttf", -config.get_integer("MENU_FONT_SIZE")) },
     m_ball_bmp { m_resources.get_bitmap("data/ball2.png") },
     m_tile_bmp { m_resources.get_bitmap("data/tile.png") },
     m_cursor_screen { -1, -1 },
     m_cursor_tile { -1, -1 },
 
-    m_ball_count { config::COLOR_COUNT },
+    m_ball_colors { config.get_color_range("BALL_COLORS") },
+    m_ball_count { config.get_integer("COLOR_COUNT") },
+    m_screen_w { m_config.get_integer("SCREEN_W") },
+    m_screen_h { m_config.get_integer("SCREEN_H") },
+    m_field_w { config.get_real("FIELD_W") },
+    m_board_shift_x { config.get_real("BOARD_SHIFT_X") },
+    m_board_shift_y { config.get_real("BOARD_SHIFT_Y") },
+    m_field_color(config.get_color("FIELD_COLOR")),
+    m_field_thick { config.get_real("FIELD_THICK") },
+    m_ball_color_filter { config.get_vec("BALL_COLOR_FILTER") },
+    m_field_margin { config.get_real("FIELD_MARGIN") },
+    m_ball_radius { config.get_real("BALL_RADIUS") },
+    m_ball_jump_h { m_config.get_real("BALL_JUMP_H") },
+    m_bg_color(config.get_color("BG_COLOR")),
+    m_score_color(config.get_color("SCORE_COLOR")),
+    m_score_shift_x { config.get_integer("SCORE_SHIFT_X") },
+    m_score_shift_y { config.get_integer("SCORE_SHIFT_Y") },
 
     m_menu_state { this },
     m_deal_state { this },
@@ -48,7 +72,7 @@ KulkiContext::KulkiContext() :
     m_score { 0 },
     m_streak { 0 }
 {
-    assert(m_ball_count <= static_cast<int>(config::BALL_COLORS.size()));
+    assert(m_ball_count <= static_cast<int>(m_ball_colors.size()));
     set_state_menu();
 }
 
@@ -62,7 +86,7 @@ void KulkiContext::gen_next_deal(int count)
 
 glm::mat3 KulkiContext::m_current_transform()
 {
-    return scale(config::FIELD_W) * translate(config::BOARD_SHIFT_X, config::BOARD_SHIFT_Y);
+    return scale(m_field_w) * translate(m_board_shift_x, m_board_shift_y);
 }
 
 void KulkiContext::draw_field(
@@ -88,9 +112,9 @@ void KulkiContext::draw_field(
             0);
 
     if (fill) {
-        al_draw_filled_rectangle(x1, y1, x2, y2, config::FIELD_COLOR);
+        al_draw_filled_rectangle(x1, y1, x2, y2, m_field_color);
     } else {
-        al_draw_rectangle(x1, y1, x2, y2, config::FIELD_COLOR, config::FIELD_THICK);
+        al_draw_rectangle(x1, y1, x2, y2, m_field_color, m_field_thick);
     }
 
 }
@@ -103,12 +127,12 @@ void KulkiContext::draw_ball(
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
 
     float red, green, blue;
-    al_unmap_rgb_f(config::BALL_COLORS[color], &red, &green, &blue);
+    al_unmap_rgb_f(m_ball_colors[color], &red, &green, &blue);
 
     ALLEGRO_COLOR filtered_color = al_map_rgb_f(
-            red * config::BALL_COLOR_FILTER.r,
-            green * config::BALL_COLOR_FILTER.g,
-            blue * config::BALL_COLOR_FILTER.b);
+            red * m_ball_color_filter.r,
+            green * m_ball_color_filter.g,
+            blue * m_ball_color_filter.b);
 
     double image_w = al_get_bitmap_width(m_ball_bmp);
     double xscale = 2.0 * r / image_w;
@@ -131,12 +155,12 @@ void KulkiContext::draw_board(const Board& b, const glm::mat3& transf)
     for (int x = 0; x < b.m_width; ++x) {
         for (int y = 0; y < b.m_height; ++y) {
             draw_field(
-                glm::vec3 { x + config::FIELD_MARGIN, y + config::FIELD_MARGIN, 1.0 },
-                glm::vec3 { x + 1.0 - config::FIELD_MARGIN, y + 1.0 - config::FIELD_MARGIN, 1.0 },
+                glm::vec3 { x + m_field_margin, y + m_field_margin, 1.0 },
+                glm::vec3 { x + 1.0 - m_field_margin, y + 1.0 - m_field_margin, 1.0 },
                 x == m_cursor_tile.first && y == m_cursor_tile.second,
                 transf);
-            if (b(x, y) != config::EMPTY) {
-                draw_ball(x + 0.5, y + 0.5, b(x, y), config::BALL_RADIUS, 1.0, transf);
+            if (b(x, y) != m_empty_field) {
+                draw_ball(x + 0.5, y + 0.5, b(x, y), m_ball_radius, 1.0, transf);
             }
         }
     }
@@ -186,15 +210,15 @@ void KulkiContext::draw(double weight)
 {
     glm::mat3 transf = m_current_transform();
 
-    al_clear_to_color(config::BG_COLOR);
+    al_clear_to_color(m_bg_color);
 
     al_draw_textf(m_score_font,
-            config::SCORE_COLOR, config::SCORE_SHIFT_X, config::SCORE_SHIFT_Y, ALLEGRO_ALIGN_LEFT,
+            m_score_color, m_score_shift_x, m_score_shift_y, ALLEGRO_ALIGN_LEFT,
             "Score : %d", m_score);
 
     int ball_index = 0;
     for (int color : m_next_deal) {
-        draw_ball(-2 + 0.5, ball_index++ + 0.5, color, config::BALL_RADIUS, 1.0, transf);
+        draw_ball(-2 + 0.5, ball_index++ + 0.5, color, m_ball_radius, 1.0, transf);
     }
 
     draw_board(m_board, transf);
@@ -228,7 +252,7 @@ void KulkiContext::reset_state_wait_ball(int src_x, int src_y, int color)
 void KulkiContext::set_state_wait_dest(int src_x, int src_y)
 {
     m_wait_dest_state.reset(src_x, src_y, m_board(src_x, src_y), 0);
-    m_board(src_x, src_y) = config::EMPTY;
+    m_board(src_x, src_y) = m_config.get_integer("EMPTY");
     m_current_state = &m_wait_dest_state;
 }
 
@@ -240,18 +264,18 @@ void KulkiContext::reset_state_wait_dest(int src_x, int src_y)
 
 void KulkiContext::set_state_deal()
 {
-    if (m_board.free_fields() < config::DEAL_COUNT_INGAME) {
+    if (m_board.free_fields() < m_config.get_integer("DEAL_COUNT_INGAME")) {
         set_state_gameover();
         return;
     }
 
-    m_deal_state.reset(config::DEAL_PERIOD);
+    m_deal_state.reset(m_config.get_real("DEAL_PERIOD"));
     m_current_state = &m_deal_state;
 }
 
 void KulkiContext::set_state_gameover()
 {
-    m_gameover_state.reset(config::GAMEOVER_PERIOD, 0);
+    m_gameover_state.reset(m_config.get_real("GAMEOVER_PERIOD"), 0);
     m_current_state = &m_gameover_state;
 }
 
@@ -270,7 +294,7 @@ void KulkiContext::set_state_move(int src_x, int src_y, int dst_x, int dst_y, in
         return;
     }
 
-    m_move_state.reset(std::move(path), config::MOVE_PERIOD, dst_x, dst_y, color);
+    m_move_state.reset(std::move(path), m_config.get_real("MOVE_PERIOD"), dst_x, dst_y, color);
     m_current_state = &m_move_state;
 }
 

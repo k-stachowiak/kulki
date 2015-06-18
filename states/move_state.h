@@ -11,6 +11,7 @@ class MoveState : public StateNode {
 
     KulkiContext* const m_context;
 
+    double m_move_period;
     std::deque<std::pair<int, int>> m_path;
     double m_time;
     int m_dst_x, m_dst_y;

@@ -16,6 +16,7 @@
 
 struct Board {
 
+    int m_empty_value;
     int m_width, m_height;
     std::vector<int> m_fields;
 
@@ -41,9 +42,10 @@ struct Board {
     }
 
     // Custom constructor:
-    Board(int w, int h) :
+    Board(int w, int h, int empty_value) :
+        m_empty_value { empty_value },
         m_width { w }, m_height { h },
-        m_fields(w * h, config::EMPTY)
+        m_fields(w * h, empty_value)
     {}
 
     // API:
@@ -59,7 +61,7 @@ struct Board {
 
     void clear()
     {
-        std::fill(begin(m_fields), end(m_fields), config::EMPTY);
+        std::fill(begin(m_fields), end(m_fields), m_empty_value);
     }
 
     bool has(int x, int y) const
@@ -69,7 +71,7 @@ struct Board {
 
     int free_fields()
     {
-        return std::count(begin(m_fields), end(m_fields), config::EMPTY);
+        return std::count(begin(m_fields), end(m_fields), m_empty_value);
     }
 
     std::vector<std::pair<int, int>> m_find_streak_part(const std::pair<int, int>& src, int dx, int dy)
@@ -100,7 +102,7 @@ struct Board {
     }
 
     template <typename Out>
-    bool find_streak(const std::pair<int, int>& src, Out out)
+    bool find_streak(const std::pair<int, int>& src, Out out, int serie_min)
     {
         int inserts = 0;
         std::vector<std::pair<int, int>> directions {
@@ -109,7 +111,7 @@ struct Board {
 
         for (const auto& dir : directions) {
             auto s = m_find_streak_part(src, dir.first, dir.second);
-            if (static_cast<int>(s.size()) >= config::SERIE_MIN) {
+            if (static_cast<int>(s.size()) >= serie_min) {
                 std::copy(begin(s), end(s), out);
                 ++inserts;
             }
@@ -154,7 +156,7 @@ struct Board {
 
             int new_dist = dists[u] + 1;
             for (const auto& v : neighbors) {
-                if ((*this)(v.first, v.second) != config::EMPTY) {
+                if ((*this)(v.first, v.second) != m_empty_value) {
                     continue;
                 }
                 if (new_dist < dists[v]) {

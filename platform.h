@@ -16,6 +16,8 @@ class Platform {
 
     const int m_screen_w, m_screen_h;
     const double m_fps, m_spf;
+    const double m_max_frame_time;
+    const double m_frame_rest;
     double m_current_time, m_accumulator;
 
     std::unique_ptr<ALLEGRO_DISPLAY, AlDisplayDeleter> m_display;
@@ -25,7 +27,7 @@ class Platform {
     void m_realtime_loop_step(StateNode &state_node);
 
 public:
-    Platform();
+    Platform(int screen_w, int screen_h, double fps, double max_frame_time, double frame_rest);
     void realtime_loop(StateNode &state_node);
 };
 

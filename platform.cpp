@@ -9,7 +9,6 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_primitives.h>
 
-#include "config.h"
 #include "platform.h"
 
 void Platform::m_process_events(StateNode &state_node)
@@ -58,8 +57,8 @@ void Platform::m_realtime_loop_step(StateNode &state_node)
 
     double frame_time = new_time - m_current_time;
 
-    if (frame_time > config::MAX_FRAME_TIME) {
-        frame_time = config::MAX_FRAME_TIME;
+    if (frame_time > m_max_frame_time) {
+        frame_time = m_max_frame_time;
     }
 
     m_current_time = new_time;
@@ -74,11 +73,13 @@ void Platform::m_realtime_loop_step(StateNode &state_node)
     state_node.draw(frame_weight);
 }
 
-Platform::Platform() :
-    m_screen_w { config::SCREEN_W },
-    m_screen_h { config::SCREEN_H },
-    m_fps { config::FPS },
-    m_spf { 1.0 / m_fps }
+Platform::Platform(int screen_w, int screen_h, double fps, double max_frame_time, double frame_rest) :
+    m_screen_w { screen_w },
+    m_screen_h { screen_h },
+    m_fps { fps },
+    m_spf { 1.0 / m_fps },
+    m_max_frame_time { max_frame_time },
+    m_frame_rest { frame_rest }
 {
     if (!al_init()) {
         std::cerr << "Failed initializing platform wrapper." << std::endl;
@@ -156,7 +157,7 @@ void Platform::realtime_loop(StateNode &state_node)
             break;
         }
 
-        al_rest(config::FRAME_REST);
+        al_rest(m_frame_rest);
     }
 }
 

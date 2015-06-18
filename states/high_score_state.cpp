@@ -8,7 +8,7 @@ std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighSco
     std::vector<std::string> result;
     for (const auto& e : entries) {
         std::stringstream ss;
-        int padding = config::HIGHSCORE_CHARACTERS - e.str_len();
+        int padding = m_highscore_characters - e.str_len();
         ss << e.name << std::string(padding, '.') << e.score;
         result.push_back(ss.str());
     }
@@ -16,12 +16,13 @@ std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighSco
 }
 
 HighScoreState::HighScoreState(KulkiContext* context) :
-    m_context { context }
+    m_context { context },
+    m_highscore_characters { context->m_config.get_integer("HIGHSCORE_CHARACTERS") }
 {}
 
 void HighScoreState::reset(int balls, int score)
 {
-    m_high_score = HighScore::load("high_score");
+    m_high_score = HighScore::load("high_score", m_context->m_config.get_integer("HIGHSCORE_ENTRIES"));
     m_balls = balls;
     m_score = score;
 
@@ -44,8 +45,11 @@ void HighScoreState::on_key(int key, bool down)
 
     switch (m_phase) {
     case HIGH_SCORE_INPUT:
-        if ((key >= ALLEGRO_KEY_A && key <= ALLEGRO_KEY_Z) || key == ALLEGRO_KEY_SPACE) {
+        if (key >= ALLEGRO_KEY_A && key <= ALLEGRO_KEY_Z) {
             m_name.push_back(key + 'A' - 1);
+
+        } else if (key == ALLEGRO_KEY_SPACE) {
+            m_name.push_back(' ');
 
         } else if (key == ALLEGRO_KEY_BACKSPACE && !m_name.empty()) {
             m_name.pop_back();
@@ -98,8 +102,8 @@ void HighScoreState::draw(double)
         al_draw_textf(
             m_context->m_menu_font,
             al_map_rgb_f(1, 1, 1),
-            config::SCREEN_W / 2,
-            config::SCREEN_H / 2,
+            m_context->m_screen_w / 2,
+            m_context->m_screen_w / 2,
             ALLEGRO_ALIGN_CENTRE,
             "typename: %s",
             m_name.c_str());
@@ -115,18 +119,18 @@ void HighScoreState::draw(double)
         al_draw_textf(
             m_context->m_menu_font,
             al_map_rgb_f(1, 1, 1),
-            config::SCREEN_W / 2, 100.0,
+            m_context->m_screen_w / 2, 100.0,
             ALLEGRO_ALIGN_CENTER,
             "High score for %d balls",
             m_ball_counts.front());
 
-        y = config::SCREEN_H / 2 - (outries.size() / 2) * line_height;
+        y = m_context->m_screen_h / 2 - (outries.size() / 2) * line_height;
 
         for (const std::string& outry : outries) {
             al_draw_text(
                 m_context->m_menu_font,
                 al_map_rgb_f(1, 1, 1),
-                config::SCREEN_W / 2, y,
+                m_context->m_screen_w / 2, y,
                 ALLEGRO_ALIGN_CENTRE,
                 outry.c_str());
             y += line_height;

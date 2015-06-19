@@ -9,7 +9,7 @@
 (bind BOARD_W 9)
 (bind BOARD_H 9)
 (bind COLOR_COUNT 5)
-(bind SERIE_MIN 5)
+(bind SCORE_SERIE_MIN 5)
 (bind DEAL_COUNT_INIT 7)
 (bind DEAL_COUNT_INGAME 3)
 

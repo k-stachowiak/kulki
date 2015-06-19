@@ -25,6 +25,8 @@ add_executable(kulki
     ./states/move_state.cpp
     ./states/wait_ball_state.cpp
     ./states/kulki_context.cpp
+    ./states/kulki_constants.cpp
+    ./states/kulki_ui.cpp
     ./states/score_state.cpp
     ./states/menu_state.cpp
     ./states/deal_state.cpp

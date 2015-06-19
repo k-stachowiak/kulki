@@ -4,10 +4,7 @@
 #include "kulki_context.h"
 
 GameoverState::GameoverState(KulkiContext* context) :
-    m_context { context },
-    m_period { m_context->m_config.get_real("GAMEOVER_PERIOD") },
-    m_gameover_shift_x { m_context->m_config.get_integer("GAMEOVER_SHIFT_X") },
-    m_gameover_shift_y { m_context->m_config.get_integer("GAMEOVER_SHIFT_Y") }
+    m_context { context }
 {}
 
 void GameoverState::reset(double time, int index)
@@ -22,15 +19,16 @@ void GameoverState::tick(double dt)
         return;
     }
 
-    m_time = m_period;
-    m_index = (m_index + 1) % m_context->m_ball_colors.size();
+    m_time = m_context->m_constants.gameover_period;
+    m_index = (m_index + 1) % m_context->m_constants.ball_colors.size();
 }
 
 void GameoverState::draw(double)
 {
     al_draw_text(
-        m_context->m_gameover_font, m_context->m_ball_colors[m_index],
-        m_gameover_shift_x, m_gameover_shift_y,
+        m_context->m_constants.gameover_font, m_context->m_constants.ball_colors[m_index],
+        m_context->m_constants.gameover_shift_x,
+        m_context->m_constants.gameover_shift_y,
         ALLEGRO_ALIGN_CENTRE,
         "Game Over");
 }

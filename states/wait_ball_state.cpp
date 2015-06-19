@@ -41,7 +41,7 @@ void WaitBallState::on_button(int button, bool down)
 {
     int tx = m_context->m_cursor_tile.first;
     int ty = m_context->m_cursor_tile.second;
-    if (m_context->m_board.has(tx, ty) && m_context->m_board(tx, ty) != m_context->m_empty_field) {
+    if (m_context->m_board.has(tx, ty) && m_context->m_board(tx, ty) != m_context->m_constants.empty_field) {
         m_context->set_state_wait_dest(tx, ty);
     }
 }
@@ -51,9 +51,9 @@ void WaitBallState::draw(double)
 {
     if (m_usure_phase) {
         al_draw_text(
-            m_context->m_menu_font, al_map_rgb_f(1, 1, 1),
-            m_context->m_screen_w / 2.0,
-            m_context->m_screen_h / 2.0,
+            m_context->m_constants.menu_font, al_map_rgb_f(1, 1, 1),
+            m_context->m_constants.screen_w / 2.0,
+            m_context->m_constants.screen_h / 2.0,
             ALLEGRO_ALIGN_CENTRE,
             "Are you sure? [y/n]");
     }

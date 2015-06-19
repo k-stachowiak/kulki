@@ -10,7 +10,6 @@ class HighScoreState : public StateNode {
 
     KulkiContext* const m_context;
 
-    int m_highscore_characters;
     HighScore m_high_score;
 
     enum {

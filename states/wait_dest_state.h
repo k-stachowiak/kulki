@@ -8,7 +8,6 @@ struct KulkiContext;
 class WaitDestState : public StateNode {
     KulkiContext* const m_context;
 
-    double m_bump_period;
     int m_src_x, m_src_y;
     int m_color;
     double m_time;

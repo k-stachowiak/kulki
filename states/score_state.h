@@ -7,8 +7,6 @@ class ScoreState : public StateNode {
 
     KulkiContext* const m_context;
 
-    double m_period;
-    ALLEGRO_COLOR m_score_color;
     double m_time;
     double m_cx, m_cy;
     int m_incr;

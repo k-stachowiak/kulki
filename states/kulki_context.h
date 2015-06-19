@@ -1,6 +1,8 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
+#include "kulki_ui.h"
+#include "kulki_constants.h"
 #include "resources.h"
 #include "state_node.h"
 #include "board.h"
@@ -15,37 +17,18 @@
 
 struct KulkiContext : public StateNode {
 
-    KulkiConfig &m_config;
-
-    int m_empty_field;
-
     Resources m_resources;
-    Board m_board;
-    bool m_alive;
+    KulkiConstants m_constants;
+    KulkiUi m_ui;
 
-    ALLEGRO_FONT* m_gameover_font;
-    ALLEGRO_FONT* m_score_font;
-    ALLEGRO_FONT *m_menu_font;
-    ALLEGRO_BITMAP *m_ball_bmp;
-    ALLEGRO_BITMAP *m_tile_bmp;
+    Board m_board;
+
+    bool m_alive;
     std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
-
-    std::vector<ALLEGRO_COLOR> m_ball_colors;
-    int m_ball_count;
-
-    int m_screen_w, m_screen_h;
-    double m_field_w;
-    double m_board_shift_x, m_board_shift_y;
-    ALLEGRO_COLOR m_field_color;
-    double m_field_thick;
-    glm::vec3 m_ball_color_filter;
-    double m_field_margin;
-    double m_ball_radius;
-    double m_ball_jump_h;
-    ALLEGRO_COLOR m_bg_color;
-    ALLEGRO_COLOR m_score_color;
-    int m_score_shift_x, m_score_shift_y;
+    std::vector<int> m_next_deal;
+    int m_score;
+    int m_streak;
 
     MenuState m_menu_state;
     DealState m_deal_state;
@@ -57,9 +40,6 @@ struct KulkiContext : public StateNode {
     HighScoreState m_high_score_state;
 
     StateNode *m_current_state;
-    std::vector<int> m_next_deal;
-    int m_score;
-    int m_streak;
 
     KulkiContext(KulkiConfig &config);
 

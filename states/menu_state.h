@@ -11,13 +11,6 @@ class MenuState : public StateNode {
 
     KulkiContext* const m_context;
 
-    double m_padding;
-    double m_margin;
-    ALLEGRO_COLOR m_bg_color_l;
-    ALLEGRO_COLOR m_bg_color_d;
-    ALLEGRO_COLOR m_regular_color;
-    ALLEGRO_COLOR m_select_color;
-
     const std::vector<std::string> m_entries;
     unsigned m_current;
     double m_width, m_height;

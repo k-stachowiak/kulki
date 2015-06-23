@@ -23,7 +23,6 @@ namespace {
 KulkiContext::KulkiContext(KulkiConfig &config) :
 
     m_constants { m_resources, config },
-    m_ui { &m_score },
     m_board { m_constants.board_w, m_constants.board_h, m_constants.empty_field },
 
     m_alive { true },
@@ -183,7 +182,6 @@ void KulkiContext::draw(double weight)
 
     al_clear_to_color(m_constants.bg_color);
 
-    m_ui.draw();
     al_draw_textf(m_constants.score_font,
             m_constants.score_color, m_constants.score_shift_x, m_constants.score_shift_y, ALLEGRO_ALIGN_LEFT,
             "Score : %d", m_score);

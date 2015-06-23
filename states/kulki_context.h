@@ -1,7 +1,6 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
-#include "kulki_ui.h"
 #include "kulki_constants.h"
 #include "resources.h"
 #include "state_node.h"
@@ -19,7 +18,6 @@ struct KulkiContext : public StateNode {
 
     Resources m_resources;
     KulkiConstants m_constants;
-    KulkiUi m_ui;
 
     Board m_board;
 

@@ -8,9 +8,9 @@ KulkiConstants::KulkiConstants(Resources &resources, KulkiConfig &config) :
     board_w { config.get_integer("BOARD_W") },
     board_h { config.get_integer("BOARD_H") },
 
-    gameover_font { resources.get_font("data/prstartk.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
-    score_font { resources.get_font("data/prstartk.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
-    menu_font { resources.get_font("data/prstartk.ttf", -config.get_integer("MENU_FONT_SIZE")) },
+    gameover_font { resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
+    score_font { resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
+    menu_font { resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
     ball_bmp { resources.get_bitmap("data/ball2.png") },
     tile_bmp { resources.get_bitmap("data/tile.png") },
 

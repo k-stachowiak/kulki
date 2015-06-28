@@ -23,8 +23,6 @@ struct KulkiContext : public dick::PlatformClient {
 
     KulkiContext(KulkiConfig &config);
 
-    void gen_next_deal(int count);
-
     glm::mat3 current_transform();
 
     void draw_field(const glm::vec3& top_left, const glm::vec3& bot_right, bool fill, const glm::mat3& transf);

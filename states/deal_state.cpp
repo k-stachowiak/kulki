@@ -43,7 +43,7 @@ void DealState::tick(double dt)
     m_positions.emplace_back(m_current_x, m_current_y);
 
     if (m_context->m_var.m_next_deal.empty()) {
-        m_context->gen_next_deal(m_context->m_const.deal_count_ingame);
+        m_context->m_var.gen_next_deal(m_context->m_const.deal_count_ingame);
         t_transition_required = true;
     } else {
         deal_next();

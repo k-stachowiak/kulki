@@ -15,24 +15,11 @@
 #include "wait_ball_state.h"
 #include "wait_dest_state.h"
 
-namespace {
-    std::random_device device;
-    std::mt19937 engine { device() };
-}
-
 KulkiContext::KulkiContext(KulkiConfig &config) :
     m_const { m_resources, config },
     m_var { m_const },
     m_machine { std::shared_ptr<dick::StateNode> { new MenuState { this } } }
 {}
-
-void KulkiContext::gen_next_deal(int count)
-{
-    std::uniform_int_distribution<int> distr_color(0, m_const.ball_count - 1);
-    for (int i = 0; i < count; ++i) {
-        m_var.m_next_deal.push_back(distr_color(engine));
-    }
-}
 
 glm::mat3 KulkiContext::current_transform()
 {

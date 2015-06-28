@@ -31,7 +31,7 @@ void MenuState::m_select()
     if (entry == "New game") {
         m_context->m_var.m_board.clear();
         m_context->m_var.m_score = 0;
-        m_context->gen_next_deal(m_context->m_const.deal_count_init);
+        m_context->m_var.gen_next_deal(m_context->m_const.deal_count_init);
         t_transition_required = true;
         m_next_state.reset(new DealState { m_context, m_context->m_const.deal_period });
 

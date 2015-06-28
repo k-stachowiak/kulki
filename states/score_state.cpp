@@ -63,7 +63,7 @@ void ScoreState::tick(double dt)
         if (m_context->m_var.m_board.free_fields() < m_context->m_const.deal_count_ingame) {
             m_next_state.reset(new GameoverState { m_context });
         } else {
-            m_context->gen_next_deal(m_context->m_const.deal_count_ingame);
+            //m_context->gen_next_deal(m_context->m_const.deal_count_ingame);
             m_next_state.reset(new DealState { m_context, m_context->m_const.deal_period });
         }
 

@@ -42,9 +42,9 @@ void WaitBallState::on_button(int button, bool down)
     if (!down) {
         return;
     }
-    int tx = m_context->m_cursor_tile.first;
-    int ty = m_context->m_cursor_tile.second;
-    if (m_context->m_board.has(tx, ty) && m_context->m_board(tx, ty) != m_context->m_constants.empty_field) {
+    int tx = m_context->m_var.m_cursor_tile.first;
+    int ty = m_context->m_var.m_cursor_tile.second;
+    if (m_context->m_var.m_board.has(tx, ty) && m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
         t_transition_required = true;
         m_next_state.reset(new WaitDestState { m_context, tx, ty });
     }
@@ -55,9 +55,9 @@ void WaitBallState::draw(double)
 {
     if (m_usure_phase) {
         al_draw_text(
-            m_context->m_constants.menu_font, al_map_rgb_f(1, 1, 1),
-            m_context->m_constants.screen_w / 2.0,
-            m_context->m_constants.screen_h / 2.0,
+            m_context->m_const.menu_font, al_map_rgb_f(1, 1, 1),
+            m_context->m_const.screen_w / 2.0,
+            m_context->m_const.screen_h / 2.0,
             ALLEGRO_ALIGN_CENTRE,
             "Are you sure? [y/n]");
     }

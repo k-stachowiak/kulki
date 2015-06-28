@@ -21,7 +21,8 @@ set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Werror -g -O0 -DDICK_LOG_ENABLE")
 add_executable(kulki
     ./gui/widget.cpp
     ./model/high_score.cpp
-    ./model/kulki_constants.cpp
+    ./states/kulki_constants.cpp
+    ./states/kulki_variables.cpp
     ./states/high_score_state.cpp
     ./states/game_over_state.cpp
     ./states/wait_dest_state.cpp

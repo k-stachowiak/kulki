@@ -2,6 +2,7 @@
 #define CONTEXT_H
 
 #include "kulki_constants.h"
+#include "kulki_variables.h"
 #include "dick.h"
 #include "board.h"
 #include "menu_state.h"
@@ -16,23 +17,15 @@
 struct KulkiContext : public dick::PlatformClient {
 
     dick::Resources m_resources;
-    KulkiConstants m_constants;
-
-    Board m_board;
-
-    std::pair<int, int> m_cursor_screen;
-    std::pair<int, int> m_cursor_tile;
-    std::vector<int> m_next_deal;
-    int m_score;
-    int m_streak;
-
+    KulkiConstants m_const;
+    KulkiVariables m_var;
     dick::StateMachine m_machine;
 
     KulkiContext(KulkiConfig &config);
 
     void gen_next_deal(int count);
 
-    glm::mat3 m_current_transform();
+    glm::mat3 current_transform();
 
     void draw_field(const glm::vec3& top_left, const glm::vec3& bot_right, bool fill, const glm::mat3& transf);
     void draw_ball(double x, double y, int color, double r, double squeeze, const glm::mat3& transf);

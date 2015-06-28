@@ -3,11 +3,11 @@
 
 #include <vector>
 
-#include "state_node.h"
+#include "dick.h"
 
 struct KulkiContext;
 
-class DealState : public StateNode {
+class DealState : public dick::StateNode {
 
     KulkiContext* const m_context;
 
@@ -18,10 +18,11 @@ class DealState : public StateNode {
     void deal_next();
 
 public:
-    DealState(KulkiContext* context);
-    void reset(double time);
+    DealState(KulkiContext* context, double time);
     void tick(double dt) override;
     void draw(double weight) override;
+
+    std::shared_ptr<StateNode> next_state() override;
 };
 
 #endif

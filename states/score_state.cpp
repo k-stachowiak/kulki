@@ -1,13 +1,10 @@
 #include "kulki_context.h"
 #include "score_state.h"
 
-ScoreState::ScoreState(KulkiContext* context) :
-    m_context { context }
-{}
-
-void ScoreState::reset(const std::vector<std::pair<int, int>>& changes, bool next_deal)
+ScoreState::ScoreState(KulkiContext* context, const std::vector<std::pair<int, int>>& changes, bool next_deal) :
+    m_context { context },
+    m_next_deal { next_deal }
 {
-    m_next_deal = next_deal;
     std::unordered_set<std::pair<int, int>> scored;
     bool success = false;
 
@@ -58,11 +55,29 @@ void ScoreState::draw(double)
 
 void ScoreState::tick(double dt)
 {
-    if ((m_time -= dt) > 0) return;
+    if ((m_time -= dt) > 0)
+        return;
+
     if (m_next_deal) {
-        m_context->set_state_deal();
+        t_transition_required = true;
+        if (m_context->m_board.free_fields() < m_context->m_constants.deal_count_ingame) {
+            m_next_state.reset(new GameoverState { m_context });
+        } else {
+            m_context->gen_next_deal(m_context->m_constants.deal_count_ingame);
+            m_next_state.reset(new DealState { m_context, m_context->m_constants.deal_period });
+        }
+
     } else {
-        m_context->set_state_wait_ball();
+        t_transition_required = true;
+        if (m_context->m_board.free_fields() == 0)
+            m_next_state.reset(new GameoverState { m_context });
+        else
+            m_next_state.reset(new WaitBallState { m_context });
+
     }
 }
 
+std::shared_ptr<dick::StateNode> ScoreState::next_state()
+{
+    return std::move(m_next_state);
+}

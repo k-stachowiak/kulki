@@ -1,18 +1,18 @@
 #include "config.h"
-#include "resources.h"
+#include "dick.h"
 #include "kulki_constants.h"
 
-KulkiConstants::KulkiConstants(Resources &resources, KulkiConfig &config) :
+KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) :
 
     empty_field { config.get_integer("EMPTY") },
     board_w { config.get_integer("BOARD_W") },
     board_h { config.get_integer("BOARD_H") },
 
-    gameover_font { resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
-    score_font { resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
-    menu_font { resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
-    ball_bmp { resources.get_bitmap("data/ball2.png") },
-    tile_bmp { resources.get_bitmap("data/tile.png") },
+    gameover_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
+    score_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
+    menu_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
+    ball_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/ball2.png") },
+    tile_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/tile.png") },
 
     ball_colors { config.get_color_range("BALL_COLORS") },
     ball_count { config.get_integer("COLOR_COUNT") },

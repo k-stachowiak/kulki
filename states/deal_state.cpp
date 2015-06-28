@@ -27,15 +27,10 @@ void DealState::deal_next()
     m_current_color = new_color;
 }
 
-DealState::DealState(KulkiContext* context) :
-    m_context { context }
-{}
-
-void DealState::reset(double time)
+DealState::DealState(KulkiContext* context, double time) :
+    m_context { context },
+    m_time { time }
 {
-    m_time = time;
-    m_positions.clear();
-
     deal_next();
 }
 
@@ -49,7 +44,7 @@ void DealState::tick(double dt)
 
     if (m_context->m_next_deal.empty()) {
         m_context->gen_next_deal(m_context->m_constants.deal_count_ingame);
-        m_context->set_state_score(m_positions, false);
+        t_transition_required = true;
     } else {
         deal_next();
     }
@@ -61,5 +56,10 @@ void DealState::draw(double)
     double x = double(m_current_x) + 0.5;
     double y = double(m_current_y) + 0.5;
     m_context->draw_ball(x, y, m_current_color, m_context->m_constants.ball_radius, squeeze, m_context->m_current_transform());
+}
+
+std::shared_ptr<dick::StateNode> DealState::next_state()
+{
+    return std::shared_ptr<StateNode> { new ScoreState { m_context, m_positions, false } };
 }
 

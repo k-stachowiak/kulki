@@ -4,13 +4,16 @@
 #include "kulki_context.h"
 
 GameoverState::GameoverState(KulkiContext* context) :
-    m_context { context }
+    m_context { context },
+    m_time { context->m_constants.gameover_period },
+    m_index { 0 }
 {}
 
-void GameoverState::reset(double time, int index)
+void GameoverState::on_key(int key, bool down)
 {
-    m_time = time;
-    m_index = index;
+    if (down) {
+        t_transition_required = true;
+    }
 }
 
 void GameoverState::tick(double dt)
@@ -26,16 +29,15 @@ void GameoverState::tick(double dt)
 void GameoverState::draw(double)
 {
     al_draw_text(
-        m_context->m_constants.gameover_font, m_context->m_constants.ball_colors[m_index],
+        m_context->m_constants.gameover_font,
+        m_context->m_constants.ball_colors[m_index],
         m_context->m_constants.gameover_shift_x,
         m_context->m_constants.gameover_shift_y,
         ALLEGRO_ALIGN_CENTRE,
         "Game Over");
 }
 
-void GameoverState::on_key(int key, bool down)
+std::shared_ptr<dick::StateNode> GameoverState::next_state()
 {
-    if (down) {
-        m_context->set_state_high_score();
-    }
+    return std::shared_ptr<StateNode> { new HighScoreState { m_context, m_context->m_score } };
 }

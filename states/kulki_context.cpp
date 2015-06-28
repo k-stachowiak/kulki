@@ -25,26 +25,14 @@ KulkiContext::KulkiContext(KulkiConfig &config) :
     m_constants { m_resources, config },
     m_board { m_constants.board_w, m_constants.board_h, m_constants.empty_field },
 
-    m_alive { true },
     m_cursor_screen { -1, -1 },
     m_cursor_tile { -1, -1 },
     m_score { 0 },
     m_streak { 0 },
 
-    m_menu_state { this },
-    m_deal_state { this },
-    m_wait_ball_state { this },
-    m_wait_dest_state { this },
-    m_move_state { this },
-    m_score_state { this },
-    m_gameover_state { this },
-    m_high_score_state { this },
+    m_machine { std::shared_ptr<dick::StateNode> { new MenuState { this } } }
 
-    m_current_state { nullptr }
-
-{
-    set_state_menu();
-}
+{}
 
 void KulkiContext::gen_next_deal(int count)
 {
@@ -136,44 +124,39 @@ void KulkiContext::draw_board(const Board& b, const glm::mat3& transf)
     }
 }
 
-bool KulkiContext::is_done() const
+bool KulkiContext::is_over() const
 {
-    return !m_alive;
-}
-
-void KulkiContext::on_kill()
-{
-    m_alive = false;
+    return m_machine.is_over();
 }
 
 void KulkiContext::on_key(int key, bool down)
 {
-    m_current_state->on_key(key, down);
+    m_machine.on_key(key, down);
 }
 
 void KulkiContext::on_button(int button, bool down)
 {
-    m_current_state->on_button(button, down);
+    m_machine.on_button(button, down);
 }
 
-void KulkiContext::on_cursor(int x, int y)
+void KulkiContext::on_cursor(dick::DimScreen position)
 {
-    m_cursor_screen.first = x;
-    m_cursor_screen.second = y;
+    m_cursor_screen.first = position.x;
+    m_cursor_screen.second = position.y;
 
     glm::mat3 inv = glm::inverse(m_current_transform());
-    glm::vec3 screen_pos { x, y, 1 };
+    glm::vec3 screen_pos { position.x, position.y, 1 };
     glm::vec3 tile_pos = screen_pos * inv;
 
     m_cursor_tile.first = floor(tile_pos.x);
     m_cursor_tile.second = floor(tile_pos.y);
 
-    m_current_state->on_cursor(x, y);
+    m_machine.on_cursor(position);
 }
 
 void KulkiContext::tick(double dt)
 {
-    m_current_state->tick(dt);
+    m_machine.tick(dt);
 }
 
 void KulkiContext::draw(double weight)
@@ -192,84 +175,8 @@ void KulkiContext::draw(double weight)
     }
 
     draw_board(m_board, transf);
-    m_current_state->draw(weight);
+    m_machine.draw(weight);
 
     al_flip_display();
 }
 
-void KulkiContext::set_state_menu()
-{
-    m_menu_state.reset();
-    m_current_state = &m_menu_state;
-}
-
-void KulkiContext::set_state_wait_ball()
-{
-    m_current_state = &m_wait_ball_state;
-}
-
-void KulkiContext::reset_state_wait_ball(int src_x, int src_y, int color)
-{
-    if (m_board.free_fields() == 0) {
-        set_state_gameover();
-        return;
-    }
-
-    m_board(src_x, src_y) = color;
-    set_state_wait_ball();
-}
-
-void KulkiContext::set_state_wait_dest(int src_x, int src_y)
-{
-    m_wait_dest_state.reset(src_x, src_y, m_board(src_x, src_y), 0);
-    m_board(src_x, src_y) = m_constants.empty_field;
-    m_current_state = &m_wait_dest_state;
-}
-
-void KulkiContext::reset_state_wait_dest(int src_x, int src_y)
-{
-    m_board(m_wait_dest_state.get_src_x(), m_wait_dest_state.get_src_y()) = m_wait_dest_state.get_color();
-    set_state_wait_dest(src_x, src_y);
-}
-
-void KulkiContext::set_state_deal()
-{
-    if (m_board.free_fields() < m_constants.deal_count_ingame) {
-        set_state_gameover();
-        return;
-    }
-
-    m_deal_state.reset(m_constants.deal_period);
-    m_current_state = &m_deal_state;
-}
-
-void KulkiContext::set_state_gameover()
-{
-    m_gameover_state.reset(m_constants.gameover_period, 0);
-    m_current_state = &m_gameover_state;
-}
-
-void KulkiContext::set_state_score(const std::vector<std::pair<int, int>>& changes, bool next_deal)
-{
-    m_score_state.reset(changes, next_deal);
-    m_current_state = &m_score_state;
-}
-
-void KulkiContext::set_state_move(int src_x, int src_y, int dst_x, int dst_y, int color)
-{
-    std::deque<std::pair<int, int>> path;
-
-    if (!m_board.find_path({ src_x, src_y }, { dst_x, dst_y }, path)) {
-        reset_state_wait_ball(src_x, src_y, color);
-        return;
-    }
-
-    m_move_state.reset(std::move(path), m_constants.move_period, dst_x, dst_y, color);
-    m_current_state = &m_move_state;
-}
-
-void KulkiContext::set_state_high_score()
-{
-    m_high_score_state.reset(m_constants.ball_count, m_score);
-    m_current_state = &m_high_score_state;
-}

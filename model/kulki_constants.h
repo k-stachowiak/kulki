@@ -7,7 +7,10 @@
 #include <allegro5/allegro_font.h>
 
 class KulkiConfig;
-class Resources;
+
+namespace dick {
+    struct Resources;
+}
 
 struct KulkiConstants {
 
@@ -65,7 +68,7 @@ struct KulkiConstants {
 
     double bump_period;
 
-    KulkiConstants(Resources &resources, KulkiConfig &config);
+    KulkiConstants(dick::Resources &resources, KulkiConfig &config);
 };
 
 #endif

@@ -1,29 +1,27 @@
 #ifndef WAIT_DEST_STATE_H
 #define WAIT_DEST_STATE_H
 
-#include "state_node.h"
+#include "dick.h"
 
 struct KulkiContext;
 
-class WaitDestState : public StateNode {
+class WaitDestState : public dick::StateNode {
     KulkiContext* const m_context;
 
     int m_src_x, m_src_y;
     int m_color;
     double m_time;
 
+    std::shared_ptr<StateNode> m_next_state;
+
 public:
-    WaitDestState(KulkiContext* context);
-    void reset(int src_x, int src_y, int color, double time);
+    WaitDestState(KulkiContext* context, int src_x, int src_y);
 
-    int get_src_x() const { return m_src_x; }
-    int get_src_y() const { return m_src_y; }
-    int get_color() const { return m_color; }
-
-    void tick(double dt) override;
-    void draw(double weight) override;
     void on_key(int key, bool down) override;
     void on_button(int button, bool down) override;
+    void tick(double dt) override;
+    void draw(double weight) override;
+    std::shared_ptr<StateNode> next_state() override;
 };
 
 #endif

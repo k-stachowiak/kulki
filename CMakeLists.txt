@@ -16,7 +16,7 @@ link_directories(
     )
 
 set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Werror -g -O0")
+set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Werror -g -O0 -DDICK_LOG_ENABLE")
 
 add_executable(kulki
     ./gui/widget.cpp
@@ -31,10 +31,8 @@ add_executable(kulki
     ./states/score_state.cpp
     ./states/menu_state.cpp
     ./states/deal_state.cpp
-    ./platform.cpp
     ./config.cpp
-    ./resources.cpp
     ./main.cpp
     )
 
-target_link_libraries(kulki m allegro_monolith moon)
+target_link_libraries(kulki m allegro_monolith dick moon)

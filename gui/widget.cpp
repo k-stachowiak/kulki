@@ -5,12 +5,12 @@
 
 namespace {
 
-    Resources *g_resources = nullptr ;
+    dick::Resources *g_resources = nullptr ;
     std::string g_font_filename = "";
 
 }
 
-void gui_init(Resources *resources, const std::string &font_filename)
+void gui_init(dick::Resources *resources, const std::string &font_filename)
 {
     g_resources = resources;
     g_font_filename = font_filename;
@@ -18,7 +18,7 @@ void gui_init(Resources *resources, const std::string &font_filename)
 
 WidgetSize gui_text_size(const std::string &text, int font_size)
 {
-    ALLEGRO_FONT *font = g_resources->get_font(g_font_filename, font_size);
+    ALLEGRO_FONT *font = static_cast<ALLEGRO_FONT*>(g_resources->get_font(g_font_filename, font_size));
     return {
         al_get_text_width(font, text.c_str()),
         al_get_font_ascent(font)

@@ -15,16 +15,12 @@ std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighSco
     return result;
 }
 
-HighScoreState::HighScoreState(KulkiContext* context) :
-    m_context { context }
-{}
-
-void HighScoreState::reset(int balls, int score)
+HighScoreState::HighScoreState(KulkiContext* context, int score) :
+    m_context { context },
+    m_high_score { HighScore::load("high_score", m_context->m_constants.highscore_max_entries) },
+    m_balls { m_context->m_constants.ball_count },
+    m_score { score }
 {
-    m_high_score = HighScore::load("high_score", m_context->m_constants.highscore_max_entries);
-    m_balls = balls;
-    m_score = score;
-
     if (score != -1 && m_high_score.can_insert(m_balls, m_score)) {
         m_phase = HIGH_SCORE_INPUT;
         m_name.clear();
@@ -65,7 +61,7 @@ void HighScoreState::on_key(int key, bool down)
 
     case HIGH_SCORE_DISPLAY:
         HighScore::store("high_score", m_high_score);
-        m_context->set_state_menu();
+        t_transition_required = true;
         break;
     }
 }
@@ -138,3 +134,7 @@ void HighScoreState::draw(double)
     }
 }
 
+std::shared_ptr<dick::StateNode> HighScoreState::next_state()
+{
+    return std::shared_ptr<dick::StateNode> { new MenuState { m_context } };
+}

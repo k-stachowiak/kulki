@@ -22,8 +22,8 @@ void WaitBallState::on_key(int key, bool down)
         break;
 
     case ALLEGRO_KEY_Y:
-        m_usure_phase = false;
-        m_context->set_state_gameover();
+        t_transition_required = true;
+        m_next_state = std::shared_ptr<StateNode> { new GameoverState { m_context } };
         break;
 
     case ALLEGRO_KEY_N:
@@ -39,10 +39,14 @@ void WaitBallState::on_key(int key, bool down)
 
 void WaitBallState::on_button(int button, bool down)
 {
+    if (!down) {
+        return;
+    }
     int tx = m_context->m_cursor_tile.first;
     int ty = m_context->m_cursor_tile.second;
     if (m_context->m_board.has(tx, ty) && m_context->m_board(tx, ty) != m_context->m_constants.empty_field) {
-        m_context->set_state_wait_dest(tx, ty);
+        t_transition_required = true;
+        m_next_state.reset(new WaitDestState { m_context, tx, ty });
     }
 }
 
@@ -59,3 +63,7 @@ void WaitBallState::draw(double)
     }
 }
 
+std::shared_ptr<dick::StateNode> WaitBallState::next_state()
+{
+    return std::move(m_next_state);
+}

@@ -2,7 +2,7 @@
 #define WIDGET_H
 
 #include <glm/glm.hpp>
-#include "resources.h"
+#include "dick.h"
 
 using WidgetOffset = glm::vec2;
 using WidgetSize = glm::vec2;
@@ -28,7 +28,7 @@ public:
     virtual bool request_size(const WidgetSize &size) = 0;
 };
 
-void gui_init(Resources* resources, const std::string &font_filename);
+void gui_init(dick::Resources* resources, const std::string &font_filename);
 
 WidgetSize gui_text_size(const std::string &text, int font_size);
 

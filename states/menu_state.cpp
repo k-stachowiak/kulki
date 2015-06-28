@@ -1,6 +1,6 @@
 #include <allegro5/allegro_primitives.h>
 
-#include "state_node.h"
+#include "dick.h"
 #include "kulki_context.h"
 #include "menu_state.h"
 
@@ -32,14 +32,16 @@ void MenuState::m_select()
         m_context->m_board.clear();
         m_context->m_score = 0;
         m_context->gen_next_deal(m_context->m_constants.deal_count_init);
-        m_context->set_state_deal();
+        t_transition_required = true;
+        m_next_state.reset(new DealState { m_context, m_context->m_constants.deal_period });
 
     } else if (entry == "High score") {
         m_context->m_score = -1;
-        m_context->set_state_high_score();
+        t_transition_required = true;
+        m_next_state.reset(new HighScoreState { m_context, -1 });
 
     } else if (entry == "Exit") {
-        m_context->m_alive = false;
+        t_is_over = true;
 
     } else {
         throw std::runtime_error("Incogerent menu configuration");
@@ -55,21 +57,11 @@ MenuState::MenuState(KulkiContext* const context) :
     std::tie(m_width, m_height) = m_compute_dimensions();
 }
 
-void MenuState::reset()
-{
-}
-
 void MenuState::on_button(int button, bool down)
 {
     if (button == 1 && down) {
         m_select();
     }
-}
-
-void MenuState::on_cursor(int x, int y)
-{
-    m_context->m_cursor_tile.first = x;
-    m_context->m_cursor_tile.second = y;
 }
 
 void MenuState::draw(double)
@@ -105,10 +97,15 @@ void MenuState::draw(double)
 
         y += height + 2.0 * m_context->m_constants.menu_padding + m_context->m_constants.menu_margin;
 
-        if (m_context->m_cursor_tile.first > x1 && m_context->m_cursor_tile.first < x2 &&
-            m_context->m_cursor_tile.second > y1 && m_context->m_cursor_tile.second < y2) {
+        if (m_context->m_cursor_screen.first > x1 && m_context->m_cursor_screen.first < x2 &&
+            m_context->m_cursor_screen.second > y1 && m_context->m_cursor_screen.second < y2) {
             m_current = i;
         }
     }
+}
+
+std::shared_ptr<dick::StateNode> MenuState::next_state()
+{
+    return std::move(m_next_state);
 }
 

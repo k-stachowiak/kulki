@@ -1,16 +1,56 @@
 #include "wait_dest_state.h"
 #include "kulki_context.h"
 
-WaitDestState::WaitDestState(KulkiContext* context) :
-    m_context { context }
-{}
-
-void WaitDestState::reset(int src_x, int src_y, int color, double time)
+WaitDestState::WaitDestState(KulkiContext* context, int src_x, int src_y) :
+    m_context { context },
+    m_src_x { src_x },
+    m_src_y { src_y },
+    m_color { context->m_board(src_x, src_y) }
 {
-    m_src_x = src_x;
-    m_src_y = src_y;
-    m_color = color;
-    m_time = time;
+    m_context->m_board(src_x, src_y) = m_context->m_constants.empty_field;
+}
+
+void WaitDestState::on_key(int key, bool down)
+{
+    if (down && key == ALLEGRO_KEY_ESCAPE) {
+        t_transition_required = true;
+        m_context->m_board(m_src_x, m_src_y) = m_color;
+        m_next_state = std::shared_ptr<StateNode> {
+            new WaitBallState { m_context }
+        };
+    }
+}
+
+void WaitDestState::on_button(int button, bool down)
+{
+    if (!down) {
+        return;
+    }
+
+    int tx = m_context->m_cursor_tile.first;
+    int ty = m_context->m_cursor_tile.second;
+
+    if (m_context->m_board(tx, ty) != m_context->m_constants.empty_field) {
+        return;
+    }
+
+    if (tx == m_src_x && ty == m_src_y) {
+        m_context->m_board(m_src_x, m_src_y) = m_color;
+        t_transition_required = true;
+        m_next_state.reset(new WaitBallState { m_context });
+    } else {
+        std::deque<std::pair<int, int>> path;
+        if (m_context->m_board.find_path({ m_src_x, m_src_y }, { tx, ty }, path)) {
+            t_transition_required = true;
+            m_next_state.reset(new MoveState {
+                m_context,
+                std::move(path),
+                m_context->m_constants.move_period,
+                tx, ty,
+                m_color
+            });
+        }
+    }
 }
 
 void WaitDestState::tick(double dt)
@@ -32,28 +72,8 @@ void WaitDestState::draw(double)
     m_context->draw_ball(x, y, m_color, m_context->m_constants.ball_radius, squeeze, m_context->m_current_transform());
 }
 
-void WaitDestState::on_key(int key, bool down)
+std::shared_ptr<dick::StateNode> WaitDestState::next_state()
 {
-    if (down && key == ALLEGRO_KEY_ESCAPE) {
-        m_context->reset_state_wait_ball(m_src_x, m_src_y, m_color);
-    }
-}
-
-void WaitDestState::on_button(int button, bool down)
-{
-    if (!down) {
-        return;
-    }
-
-    int tx = m_context->m_cursor_tile.first;
-    int ty = m_context->m_cursor_tile.second;
-
-    if ((tx == m_src_x && ty == m_src_y) || !m_context->m_board.has(tx, ty)) {
-        m_context->reset_state_wait_ball(m_src_x, m_src_y, m_color);
-    } else if (m_context->m_board(tx, ty) != m_context->m_constants.empty_field) {
-        m_context->reset_state_wait_dest(tx, ty);
-    } else {
-        m_context->set_state_move(m_src_x, m_src_y, tx, ty, m_color);
-    }
+    return std::move(m_next_state);
 }
 

@@ -1,19 +1,8 @@
 #include <sstream>
+#include <allegro5/allegro_primitives.h>
 
 #include "high_score_state.h"
 #include "kulki_context.h"
-
-std::vector<std::string> HighScoreState::m_gen_outries(const std::vector<HighScoreEntry>& entries)
-{
-    std::vector<std::string> result;
-    for (const auto& e : entries) {
-        std::stringstream ss;
-        int padding = m_context->m_const.highscore_characters - e.str_len();
-        ss << e.name << std::string(padding, '.') << e.score;
-        result.push_back(ss.str());
-    }
-    return result;
-}
 
 HighScoreState::HighScoreState(KulkiContext* context, int score) :
     m_context { context },
@@ -89,7 +78,7 @@ void HighScoreState::tick(double dt)
 void HighScoreState::draw(double)
 {
     const double text_height = al_get_font_line_height(m_context->m_const.menu_font);
-    const double line_height = text_height + 20;
+    const double line_height = text_height + 15;
     double y;
 
     switch (m_phase) {
@@ -106,28 +95,41 @@ void HighScoreState::draw(double)
 
     case HIGH_SCORE_DISPLAY:
 
-        std::vector<std::string> outries = m_gen_outries(
-            m_high_score.get_entries_for_balls(
-                m_ball_counts.front()));
-        std::reverse(begin(outries), end(outries));
+        std::vector<HighScoreEntry> entries = m_high_score.get_entries_for_balls(m_ball_counts.front());
+        std::reverse(begin(entries), end(entries));
+
+        y = m_context->m_const.screen_h / 2 - (entries.size() / 2) * line_height;
+
+        al_draw_filled_rectangle(
+                80, 60.0 - 20.0,
+                m_context->m_const.screen_w - 80.0, 
+                y + entries.size() * line_height + 20,
+                al_map_rgba_f(0, 0, 0, 0.5));
 
         al_draw_textf(
             m_context->m_const.menu_font,
             al_map_rgb_f(1, 1, 1),
-            m_context->m_const.screen_w / 2, 100.0,
+            m_context->m_const.screen_w / 2, 60.0,
             ALLEGRO_ALIGN_CENTER,
             "High score for %d balls",
             m_ball_counts.front());
 
-        y = m_context->m_const.screen_h / 2 - (outries.size() / 2) * line_height;
+        for (const auto& entry: entries) {
 
-        for (const std::string& outry : outries) {
-            al_draw_text(
+            al_draw_textf(
                 m_context->m_const.menu_font,
                 al_map_rgb_f(1, 1, 1),
-                m_context->m_const.screen_w / 2, y,
-                ALLEGRO_ALIGN_CENTRE,
-                outry.c_str());
+                100.0, y,
+                ALLEGRO_ALIGN_LEFT,
+                "%s", entry.name.c_str());
+
+            al_draw_textf(
+                m_context->m_const.menu_font,
+                al_map_rgb_f(1, 1, 1),
+                m_context->m_const.screen_w - 100.0, y,
+                ALLEGRO_ALIGN_RIGHT,
+                "%d", entry.score);
+
             y += line_height;
         }
         break;

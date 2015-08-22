@@ -31,6 +31,17 @@ void WaitDestState::on_button(int button, bool down)
     int ty = m_context->m_var.m_cursor_tile.second;
 
     if (m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
+
+        // Restore current ball
+        m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
+
+        // Remember new ball
+        m_src_x = tx;
+        m_src_y = ty;
+        m_color = m_context->m_var.m_board(tx, ty);
+
+        // Remove new ball from board
+        m_context->m_var.m_board(m_src_x, m_src_y) = m_context->m_const.empty_field;
         return;
     }
 
@@ -38,6 +49,7 @@ void WaitDestState::on_button(int button, bool down)
         m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
         t_transition_required = true;
         m_next_state.reset(new WaitBallState { m_context });
+
     } else {
         std::deque<std::pair<int, int>> path;
         if (m_context->m_var.m_board.find_path({ m_src_x, m_src_y }, { tx, ty }, path)) {

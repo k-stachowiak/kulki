@@ -26,7 +26,7 @@ struct KulkiContext : public dick::PlatformClient {
     glm::mat3 current_transform();
 
     void draw_field(const glm::vec3& top_left, const glm::vec3& bot_right, bool fill, const glm::mat3& transf);
-    void draw_ball(double x, double y, int color, double r, double squeeze, const glm::mat3& transf);
+    void draw_ball(double x, double y, int color_index, double r, double squeeze, const glm::mat3& transf);
     void draw_board(const Board& b, const glm::mat3& transf);
 
     bool is_over() const override;

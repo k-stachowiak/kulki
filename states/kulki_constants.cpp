@@ -26,7 +26,6 @@ KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) 
     bg_color(config.get_color("BG_COLOR")),
     board_shift_x { config.get_real("BOARD_SHIFT_X") },
     board_shift_y { config.get_real("BOARD_SHIFT_Y") },
-    ball_color_filter { config.get_vec("BALL_COLOR_FILTER") },
     ball_radius { config.get_real("BALL_RADIUS") },
     ball_jump_h { config.get_real("BALL_JUMP_H") },
 

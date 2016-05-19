@@ -36,7 +36,6 @@ struct KulkiConstants {
     ALLEGRO_COLOR bg_color;
     double board_shift_x;
     double board_shift_y;
-    glm::vec3 ball_color_filter;
     double ball_radius;
     double ball_jump_h;
 

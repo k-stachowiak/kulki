@@ -57,19 +57,13 @@ void KulkiContext::draw_field(
 }
 
 void KulkiContext::draw_ball(
-        double x, double y, int color, double r,
+        double x, double y, int color_index, double r,
         double squeeze,
         const glm::mat3& transf)
 {
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
 
-    float red, green, blue;
-    al_unmap_rgb_f(m_const.ball_colors[color], &red, &green, &blue);
-
-    ALLEGRO_COLOR filtered_color = al_map_rgb_f(
-            red * m_const.ball_color_filter.r,
-            green * m_const.ball_color_filter.g,
-            blue * m_const.ball_color_filter.b);
+    ALLEGRO_COLOR color = m_const.ball_colors[color_index];
 
     double image_w = al_get_bitmap_width(m_const.ball_bmp);
     double xscale = 2.0 * r / image_w;
@@ -78,7 +72,7 @@ void KulkiContext::draw_ball(
 
     al_draw_tinted_scaled_rotated_bitmap(
             m_const.ball_bmp,
-            filtered_color,
+            color,
             image_w * 0.5,
             image_h * 0.5,
             c.x, c.y,

@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef MOVE_STATE_H
 #define MOVE_STATE_H
 

@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef GAME_OVER_STATE_H
 #define GAME_OVER_STATE_H
 
@@ -12,7 +14,8 @@ class GameoverState : public dick::StateNode {
 
 public:
     GameoverState(KulkiContext* context);
-    void on_key(int key, bool down) override;
+    void on_key(dick::Key key, bool down) override;
+    void on_button(dick::Button button, bool down) override;
     void tick(double dt) override;
     void draw(double weight) override;
     std::shared_ptr<dick::StateNode> next_state() override;

@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include "config.h"
 #include "dick.h"
 #include "kulki_constants.h"

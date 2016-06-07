@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include "kulki_context.h"
 #include "score_state.h"
 
@@ -47,7 +49,11 @@ void ScoreState::draw(double)
 
     glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->current_transform();
     al_draw_textf(
-        m_context->m_const.score_font, m_context->m_const.score_color,
+        m_context->m_const.score_font,
+        al_map_rgb_f(
+            m_context->m_const.score_color.r,
+            m_context->m_const.score_color.g,
+            m_context->m_const.score_color.b),
         text_center.x, text_center.y,
         ALLEGRO_ALIGN_CENTRE,
         "+%d", m_incr);

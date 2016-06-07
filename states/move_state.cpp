@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include "move_state.h"
 #include "kulki_context.h"
 

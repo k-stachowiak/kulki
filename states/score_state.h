@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef SCORE_STATE_H
 #define SCORE_STATE_H
 

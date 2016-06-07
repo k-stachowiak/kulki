@@ -76,7 +76,7 @@ double Config::get_real(const std::string& key)
 
 namespace {
 
-    ALLEGRO_COLOR parse_color(MoonValue *value, const std::string& symbol)
+    dick::Color parse_color(MoonValue *value, const std::string& symbol)
     {
         if ((value->type != MN_ARRAY) ||
             (value->data.compound == NULL || value->data.compound->type != MN_REAL) ||
@@ -85,21 +85,22 @@ namespace {
                 std::cerr << "Type error while reading config value " << symbol << std::endl;
                 exit(1);
         }
-        return al_map_rgb_f(
+        return {
             value->data.compound->data.real,
             value->data.compound->next->data.real,
-            value->data.compound->next->next->data.real);
+            value->data.compound->next->next->data.real
+        };
     }
 
-    ALLEGRO_COLOR load_color(MoonContext *ctx, const std::string& symbol)
+    dick::Color load_color(MoonContext *ctx, const std::string& symbol)
     {
         MoonValue *value = mn_exec_command(ctx, symbol.c_str());
-        ALLEGRO_COLOR result = parse_color(value, symbol);
+        dick::Color result = parse_color(value, symbol);
         mn_dispose(value);
         return result;
     }
 
-    std::vector<ALLEGRO_COLOR> load_color_range(MoonContext *ctx, const std::string& symbol)
+    std::vector<dick::Color> load_color_range(MoonContext *ctx, const std::string& symbol)
     {
         MoonValue *value = mn_exec_command(ctx, symbol.c_str());
         if (value->type != MN_ARRAY) {
@@ -107,7 +108,7 @@ namespace {
             exit(1);
         }
         MoonValue *item = value->data.compound;
-        std::vector<ALLEGRO_COLOR> result;
+        std::vector<dick::Color> result;
         while (item) {
             result.push_back(parse_color(item, symbol));
             item = item->next;
@@ -142,26 +143,26 @@ KulkiConfig::KulkiConfig(const std::string& script_path) :
     m_integers["EMPTY"] = -1;
 }
 
-ALLEGRO_COLOR KulkiConfig::get_color(const std::string& key)
+dick::Color KulkiConfig::get_color(const std::string& key)
 {
     auto it = m_colors.find(key);
     if (it != end(m_colors)) {
         return it->second;
     }
 
-    ALLEGRO_COLOR value = load_color(m_context.get(), key);
+    dick::Color value = load_color(m_context.get(), key);
     m_colors.insert({ key, value });
     return value;
 }
 
-std::vector<ALLEGRO_COLOR> KulkiConfig::get_color_range(const std::string& key)
+std::vector<dick::Color> KulkiConfig::get_color_range(const std::string& key)
 {
     auto it = m_color_ranges.find(key);
     if (it != end(m_color_ranges)) {
         return it->second;
     }
 
-    std::vector<ALLEGRO_COLOR> value = load_color_range(m_context.get(), key);
+    std::vector<dick::Color> value = load_color_range(m_context.get(), key);
     m_color_ranges.insert({ key, value });
     return value;
 }

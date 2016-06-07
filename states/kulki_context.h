@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
@@ -19,6 +21,8 @@ struct KulkiContext : public dick::PlatformClient {
     dick::Resources m_resources;
     KulkiConstants m_const;
     KulkiVariables m_var;
+    dick::InputBuffer m_input_buffer;
+    dick::GUI m_gui;
     dick::StateMachine m_machine;
 
     KulkiContext(KulkiConfig &config);
@@ -30,8 +34,8 @@ struct KulkiContext : public dick::PlatformClient {
     void draw_board(const Board& b, const glm::mat3& transf);
 
     bool is_over() const override;
-    void on_key(int key, bool down) override;
-    void on_button(int button, bool down) override;
+    void on_key(dick::Key key, bool down) override;
+    void on_button(dick::Button button, bool down) override;
     void on_cursor(dick::DimScreen position) override;
     void tick(double dt) override;
     void draw(double weight) override;

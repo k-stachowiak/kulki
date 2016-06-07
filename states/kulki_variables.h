@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef KULKI_VARIABLES_H
 #define KULKI_VARIABLES_H
 
@@ -9,7 +11,6 @@ struct KulkiVariables {
     KulkiConstants &m_constants;
 
     Board m_board;
-    std::pair<int, int> m_cursor_screen;
     std::pair<int, int> m_cursor_tile;
     int m_score;
     int m_streak;

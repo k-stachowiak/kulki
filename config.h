@@ -10,6 +10,8 @@
 #include <allegro5/allegro.h>
 #include <glm/glm.hpp>
 
+#include "dick.h"
+
 struct MoonContext;
 struct MoonContextDeleter { void operator()(MoonContext*); };
 
@@ -26,14 +28,14 @@ public:
 };
 
 class KulkiConfig : public Config {
-    std::map<std::string, ALLEGRO_COLOR> m_colors;
-    std::map<std::string, std::vector<ALLEGRO_COLOR>> m_color_ranges;
+    std::map<std::string, dick::Color> m_colors;
+    std::map<std::string, std::vector<dick::Color>> m_color_ranges;
     std::map<std::string, glm::vec3> m_vecs;
 
 public:
     KulkiConfig(const std::string& script_path);
-    ALLEGRO_COLOR get_color(const std::string& key);
-    std::vector<ALLEGRO_COLOR> get_color_range(const std::string& key);
+    dick::Color get_color(const std::string& key);
+    std::vector<dick::Color> get_color_range(const std::string& key);
     glm::vec3 get_vec(const std::string& key);
 };
 

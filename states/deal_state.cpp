@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include <iostream>
 
 #include "deal_state.h"

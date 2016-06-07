@@ -1,4 +1,7 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include <cassert>
+#include <algorithm>
 #include <random>
 #include <set>
 
@@ -18,6 +21,11 @@
 KulkiContext::KulkiContext(KulkiConfig &config) :
     m_const { m_resources, config },
     m_var { m_const },
+    m_gui {
+        &m_input_buffer,
+        static_cast<double>(m_const.screen_w),
+        static_cast<double>(m_const.screen_h)
+    },
     m_machine { std::shared_ptr<dick::StateNode> { new MenuState { this } } }
 {}
 
@@ -49,9 +57,20 @@ void KulkiContext::draw_field(
             0);
 
     if (fill) {
-        al_draw_filled_rectangle(x1, y1, x2, y2, m_const.field_color);
+        al_draw_filled_rectangle(
+                x1, y1, x2, y2,
+                al_map_rgb_f(
+                    m_const.field_color.r,
+                    m_const.field_color.g,
+                    m_const.field_color.b));
     } else {
-        al_draw_rectangle(x1, y1, x2, y2, m_const.field_color, m_const.field_thick);
+        al_draw_rectangle(
+                x1, y1, x2, y2,
+                al_map_rgb_f(
+                    m_const.field_color.r,
+                    m_const.field_color.g,
+                    m_const.field_color.b),
+                m_const.field_thick);
     }
 
 }
@@ -63,7 +82,10 @@ void KulkiContext::draw_ball(
 {
     glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
 
-    ALLEGRO_COLOR color = m_const.ball_colors[color_index];
+    ALLEGRO_COLOR color = al_map_rgb_f(
+            m_const.ball_colors[color_index].r,
+            m_const.ball_colors[color_index].g,
+            m_const.ball_colors[color_index].b);
 
     double image_w = al_get_bitmap_width(m_const.ball_bmp);
     double xscale = 2.0 * r / image_w;
@@ -102,21 +124,20 @@ bool KulkiContext::is_over() const
     return m_machine.is_over();
 }
 
-void KulkiContext::on_key(int key, bool down)
+void KulkiContext::on_key(dick::Key key, bool down)
 {
+    m_input_buffer.on_key(key, down);
     m_machine.on_key(key, down);
 }
 
-void KulkiContext::on_button(int button, bool down)
+void KulkiContext::on_button(dick::Button button, bool down)
 {
+    m_input_buffer.on_button(button, down);
     m_machine.on_button(button, down);
 }
 
 void KulkiContext::on_cursor(dick::DimScreen position)
 {
-    m_var.m_cursor_screen.first = position.x;
-    m_var.m_cursor_screen.second = position.y;
-
     glm::mat3 inv = glm::inverse(current_transform());
     glm::vec3 screen_pos { position.x, position.y, 1 };
     glm::vec3 tile_pos = screen_pos * inv;
@@ -124,6 +145,7 @@ void KulkiContext::on_cursor(dick::DimScreen position)
     m_var.m_cursor_tile.first = floor(tile_pos.x);
     m_var.m_cursor_tile.second = floor(tile_pos.y);
 
+    m_input_buffer.on_cursor(position);
     m_machine.on_cursor(position);
 }
 
@@ -134,17 +156,45 @@ void KulkiContext::tick(double dt)
 
 void KulkiContext::draw(double weight)
 {
+    m_gui.tick();
+
     glm::mat3 transf = current_transform();
 
-    al_clear_to_color(m_const.bg_color);
+    al_clear_to_color(al_map_rgb_f(
+                m_const.bg_color.r,
+                m_const.bg_color.g,
+                m_const.bg_color.b));
 
     al_draw_textf(m_const.score_font,
-            m_const.score_color, m_const.score_shift_x, m_const.score_shift_y, ALLEGRO_ALIGN_LEFT,
+            al_map_rgb_f(
+                m_const.score_color.r,
+                m_const.score_color.g,
+                m_const.score_color.b),
+            m_const.score_shift_x,
+            m_const.score_shift_y,
+            ALLEGRO_ALIGN_LEFT,
             "Score : %d", m_var.m_score);
 
-    int ball_index = 0;
-    for (int color : m_var.m_next_deal) {
-        draw_ball(-2 + 0.5, ball_index++ + 0.5, color, m_const.ball_radius, 1.0, transf);
+    int next_fields_to_draw = std::max(
+            m_const.deal_count_ingame,
+            static_cast<int>(m_var.m_next_deal.size()));
+
+    for (int i = 0; i < next_fields_to_draw; ++i) {
+        draw_field(
+                { -2.0 + m_const.field_margin, i + m_const.field_margin, 1.0 },
+                { -1.0 - m_const.field_margin, i + 1.0 - m_const.field_margin, 1.0 },
+                false,
+                transf);
+    }
+
+    for (int i = 0; i < m_var.m_next_deal.size(); ++i) {
+        draw_ball(
+                -2.0 + 0.5,
+                i + 0.5,
+                m_var.m_next_deal[i],
+                m_const.ball_radius,
+                1.0,
+                transf);
     }
 
     draw_board(m_var.m_board, transf);

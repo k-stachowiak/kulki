@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include <sstream>
 #include <allegro5/allegro_primitives.h>
 
@@ -21,7 +23,7 @@ HighScoreState::HighScoreState(KulkiContext* context, int score) :
     }
 }
 
-void HighScoreState::on_key(int key, bool down)
+void HighScoreState::on_key(dick::Key key, bool down)
 {
     if (!down) {
         return;
@@ -29,16 +31,16 @@ void HighScoreState::on_key(int key, bool down)
 
     switch (m_phase) {
     case HIGH_SCORE_INPUT:
-        if (key >= ALLEGRO_KEY_A && key <= ALLEGRO_KEY_Z) {
-            m_name.push_back(key + 'A' - 1);
+        if (key >= dick::Key::A && key <= dick::Key::Z) {
+            m_name.push_back(static_cast<int>(key) + 'A' - 1);
 
-        } else if (key == ALLEGRO_KEY_SPACE) {
+        } else if (key == dick::Key::SPACE) {
             m_name.push_back(' ');
 
-        } else if (key == ALLEGRO_KEY_BACKSPACE && !m_name.empty()) {
+        } else if (key == dick::Key::BACKSPACE && !m_name.empty()) {
             m_name.pop_back();
 
-        } else if (key == ALLEGRO_KEY_ENTER) {
+        } else if (key == dick::Key::ENTER) {
             m_high_score.add_entry({ m_balls, m_score, m_name });
             m_phase = HIGH_SCORE_DISPLAY;
             m_ball_counts = m_high_score.get_ball_counts();
@@ -46,6 +48,23 @@ void HighScoreState::on_key(int key, bool down)
             m_timer = m_period;
 
         }
+        break;
+
+    case HIGH_SCORE_DISPLAY:
+        HighScore::store("high_score", m_high_score);
+        t_transition_required = true;
+        break;
+    }
+}
+
+void HighScoreState::on_button(dick::Button, bool down)
+{
+    if (!down) {
+        return;
+    }
+
+    switch (m_phase) {
+    case HIGH_SCORE_INPUT:
         break;
 
     case HIGH_SCORE_DISPLAY:
@@ -81,6 +100,12 @@ void HighScoreState::draw(double)
     const double line_height = text_height + 15;
     double y;
 
+    ALLEGRO_BITMAP *target = al_get_target_bitmap();
+    al_draw_filled_rectangle(0, 0,
+            al_get_bitmap_width(target),
+            al_get_bitmap_height(target),
+            al_map_rgba_f(0, 0, 0, 0.333));
+
     switch (m_phase) {
     case HIGH_SCORE_INPUT:
         al_draw_textf(
@@ -99,12 +124,6 @@ void HighScoreState::draw(double)
         std::reverse(begin(entries), end(entries));
 
         y = m_context->m_const.screen_h / 2 - (entries.size() / 2) * line_height;
-
-        al_draw_filled_rectangle(
-                80, 60.0 - 20.0,
-                m_context->m_const.screen_w - 80.0, 
-                y + entries.size() * line_height + 20,
-                al_map_rgba_f(0, 0, 0, 0.5));
 
         al_draw_textf(
             m_context->m_const.menu_font,

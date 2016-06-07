@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include "wait_dest_state.h"
 #include "kulki_context.h"
 
@@ -10,9 +12,9 @@ WaitDestState::WaitDestState(KulkiContext* context, int src_x, int src_y) :
     m_context->m_var.m_board(src_x, src_y) = m_context->m_const.empty_field;
 }
 
-void WaitDestState::on_key(int key, bool down)
+void WaitDestState::on_key(dick::Key key, bool down)
 {
-    if (down && key == ALLEGRO_KEY_ESCAPE) {
+    if (down && key == dick::Key::ESCAPE) {
         t_transition_required = true;
         m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
         m_next_state = std::shared_ptr<StateNode> {
@@ -21,7 +23,7 @@ void WaitDestState::on_key(int key, bool down)
     }
 }
 
-void WaitDestState::on_button(int button, bool down)
+void WaitDestState::on_button(dick::Button, bool down)
 {
     if (!down) {
         return;

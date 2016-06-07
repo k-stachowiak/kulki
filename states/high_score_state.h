@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef HIGH_SCORE_STATE_H
 #define HIGH_SCORE_STATE_H
 
@@ -28,7 +30,8 @@ class HighScoreState : public dick::StateNode {
 
 public:
     HighScoreState(KulkiContext* context, int score);
-    void on_key(int key, bool down) override;
+    void on_key(dick::Key key, bool down) override;
+    void on_button(dick::Button button, bool down) override;
     void tick(double dt) override;
     void draw(double) override;
     std::shared_ptr<StateNode> next_state() override;

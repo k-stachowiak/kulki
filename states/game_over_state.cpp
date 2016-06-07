@@ -9,7 +9,14 @@ GameoverState::GameoverState(KulkiContext* context) :
     m_index { 0 }
 {}
 
-void GameoverState::on_key(int key, bool down)
+void GameoverState::on_key(dick::Key, bool down)
+{
+    if (down) {
+        t_transition_required = true;
+    }
+}
+
+void GameoverState::on_button(dick::Button, bool down)
 {
     if (down) {
         t_transition_required = true;
@@ -30,7 +37,11 @@ void GameoverState::draw(double)
 {
     al_draw_text(
         m_context->m_const.gameover_font,
-        m_context->m_const.ball_colors[m_index],
+        al_map_rgb_f(
+            m_context->m_const.ball_colors[m_index].r,
+            m_context->m_const.ball_colors[m_index].g,
+            m_context->m_const.ball_colors[m_index].b
+        ),
         m_context->m_const.gameover_shift_x,
         m_context->m_const.gameover_shift_y,
         ALLEGRO_ALIGN_CENTRE,

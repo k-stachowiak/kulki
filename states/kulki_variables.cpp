@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #include "kulki_variables.h"
 
 namespace {
@@ -8,7 +10,6 @@ namespace {
 KulkiVariables::KulkiVariables(KulkiConstants &constants) :
     m_constants { constants },
     m_board { m_constants.board_w, m_constants.board_h, m_constants.empty_field },
-    m_cursor_screen { -1, -1 },
     m_cursor_tile { -1, -1 },
     m_score { 0 },
     m_streak { 0 }

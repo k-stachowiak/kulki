@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Krzysztof Stachowiak
+
 #ifndef WAIT_BALL_STATE_H
 #define WAIT_BALL_STATE_H
 
@@ -12,8 +14,8 @@ class WaitBallState : public dick::StateNode {
 
 public:
     WaitBallState(KulkiContext* context);
-    void on_key(int key, bool down) override;
-    void on_button(int button, bool down) override;
+    void on_key(dick::Key key, bool down) override;
+    void on_button(dick::Button button, bool down) override;
     void draw(double weight) override;
     std::shared_ptr<StateNode> next_state() override;
 };

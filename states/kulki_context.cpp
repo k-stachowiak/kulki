@@ -9,24 +9,15 @@
 
 #include "kulki_context.h"
 
-#include "deal_state.h"
-#include "game_over_state.h"
-#include "high_score_state.h"
-#include "menu_state.h"
-#include "move_state.h"
-#include "score_state.h"
-#include "wait_ball_state.h"
-#include "wait_dest_state.h"
-
 KulkiContext::KulkiContext(KulkiConfig &config) :
     m_const { m_resources, config },
     m_var { m_const },
+    m_input_state { new dick::InputState },
     m_gui {
-        &m_input_buffer,
-        static_cast<double>(m_const.screen_w),
-        static_cast<double>(m_const.screen_h)
+        m_input_state,
+        m_resources
     },
-    m_machine { std::shared_ptr<dick::StateNode> { new MenuState { this } } }
+    m_machine { make_menu_state(this) }
 {}
 
 glm::mat3 KulkiContext::current_transform()
@@ -35,8 +26,10 @@ glm::mat3 KulkiContext::current_transform()
 }
 
 void KulkiContext::draw_field(
-        const glm::vec3& top_left, const glm::vec3& bot_right,
-        bool fill, const glm::mat3& transf)
+        const glm::vec3& top_left,
+        const glm::vec3& bot_right,
+        bool fill,
+        const glm::mat3& transf)
 {
     glm::vec3 out_top_left = top_left * transf;
     glm::vec3 out_bot_right = bot_right * transf;
@@ -76,7 +69,10 @@ void KulkiContext::draw_field(
 }
 
 void KulkiContext::draw_ball(
-        double x, double y, int color_index, double r,
+        double x,
+        double y,
+        int color_index,
+        double r,
         double squeeze,
         const glm::mat3& transf)
 {
@@ -126,13 +122,13 @@ bool KulkiContext::is_over() const
 
 void KulkiContext::on_key(dick::Key key, bool down)
 {
-    m_input_buffer.on_key(key, down);
+    m_input_state->on_key(key, down);
     m_machine.on_key(key, down);
 }
 
 void KulkiContext::on_button(dick::Button button, bool down)
 {
-    m_input_buffer.on_button(button, down);
+    m_input_state->on_button(button, down);
     m_machine.on_button(button, down);
 }
 
@@ -145,7 +141,7 @@ void KulkiContext::on_cursor(dick::DimScreen position)
     m_var.m_cursor_tile.first = floor(tile_pos.x);
     m_var.m_cursor_tile.second = floor(tile_pos.y);
 
-    m_input_buffer.on_cursor(position);
+    m_input_state->on_cursor(position);
     m_machine.on_cursor(position);
 }
 
@@ -156,8 +152,6 @@ void KulkiContext::tick(double dt)
 
 void KulkiContext::draw(double weight)
 {
-    m_gui.tick();
-
     glm::mat3 transf = current_transform();
 
     al_clear_to_color(al_map_rgb_f(

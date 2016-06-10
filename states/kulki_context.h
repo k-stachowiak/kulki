@@ -7,21 +7,13 @@
 #include "kulki_variables.h"
 #include "dick.h"
 #include "board.h"
-#include "menu_state.h"
-#include "deal_state.h"
-#include "wait_ball_state.h"
-#include "wait_dest_state.h"
-#include "move_state.h"
-#include "score_state.h"
-#include "high_score_state.h"
-#include "game_over_state.h"
 
 struct KulkiContext : public dick::PlatformClient {
 
     dick::Resources m_resources;
     KulkiConstants m_const;
     KulkiVariables m_var;
-    dick::InputBuffer m_input_buffer;
+    std::shared_ptr<dick::InputState> m_input_state;
     dick::GUI m_gui;
     dick::StateMachine m_machine;
 
@@ -29,9 +21,23 @@ struct KulkiContext : public dick::PlatformClient {
 
     glm::mat3 current_transform();
 
-    void draw_field(const glm::vec3& top_left, const glm::vec3& bot_right, bool fill, const glm::mat3& transf);
-    void draw_ball(double x, double y, int color_index, double r, double squeeze, const glm::mat3& transf);
-    void draw_board(const Board& b, const glm::mat3& transf);
+    void draw_field(
+            const glm::vec3& top_left,
+            const glm::vec3& bot_right,
+            bool fill,
+            const glm::mat3& transf);
+
+    void draw_ball(
+            double x,
+            double y,
+            int color_index,
+            double r,
+            double squeeze,
+            const glm::mat3& transf);
+
+    void draw_board(
+            const Board& b,
+            const glm::mat3& transf);
 
     bool is_over() const override;
     void on_key(dick::Key key, bool down) override;
@@ -40,5 +46,37 @@ struct KulkiContext : public dick::PlatformClient {
     void tick(double dt) override;
     void draw(double weight) override;
 };
+
+std::shared_ptr<dick::StateNode> make_deal_state(
+        KulkiContext *context,
+        double time);
+
+std::shared_ptr<dick::StateNode> make_gameover_state(
+        KulkiContext *context);
+
+std::shared_ptr<dick::StateNode> make_highscore_state(
+        KulkiContext *context,
+        int score);
+
+std::shared_ptr<dick::StateNode> make_menu_state(
+        KulkiContext *context);
+
+std::shared_ptr<dick::StateNode> make_move_state(
+        KulkiContext* context,
+        std::deque<std::pair<int, int>> path,
+        double time, int dst_x, int dst_y, int color);
+
+std::shared_ptr<dick::StateNode> make_score_state(
+        KulkiContext* context,
+        const std::vector<std::pair<int, int>>& changes,
+        bool next_deal);
+
+std::shared_ptr<dick::StateNode> make_wait_ball_state(
+        KulkiContext *context);
+
+std::shared_ptr<dick::StateNode> make_wait_dest_state(
+        KulkiContext *context,
+        int src_x,
+        int src_y);
 
 #endif

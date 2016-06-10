@@ -1,88 +1,109 @@
 // Copyright (C) 2015 Krzysztof Stachowiak
 
 #include "kulki_context.h"
-#include "score_state.h"
+#include "dick.h"
 
-ScoreState::ScoreState(KulkiContext* context, const std::vector<std::pair<int, int>>& changes, bool next_deal) :
-    m_context { context },
-    m_next_deal { next_deal }
-{
-    std::unordered_set<std::pair<int, int>> scored;
-    bool success = false;
+class ScoreState : public dick::StateNode {
 
-    for (const auto& change : changes) {
-        success |= m_context->m_var.m_board.find_streak(
-                change,
-                std::inserter(scored, begin(scored)),
-                m_context->m_const.score_serie_min);
-    }
+    KulkiContext* const m_context;
 
-    if (!success) {
-        m_context->m_var.m_streak = 0;
-        m_time = 0;
-        return;
-    }
+    double m_time;
+    double m_cx, m_cy;
+    int m_incr;
+    bool m_next_deal;
+    std::shared_ptr<StateNode> m_next_state;
 
-    ++m_context->m_var.m_streak;
-    m_time = m_context->m_const.score_period;
+public:
+    ScoreState(KulkiContext* context, const std::vector<std::pair<int, int>>& changes, bool next_deal) :
+        m_context { context },
+        m_next_deal { next_deal }
+    {
+        std::unordered_set<std::pair<int, int>> scored;
+        bool success = false;
 
-    int x_sum = 0, y_sum = 0;
-    for (const auto& p : scored) {
-        m_context->m_var.m_board(p.first, p.second) = m_context->m_const.empty_field;
-        x_sum += p.first;
-        y_sum += p.second;
-    }
-
-    int score_incr = scored.size() * m_context->m_var.m_streak;
-    m_context->m_var.m_score += score_incr;
-
-    // Setup state for further phase.
-    m_next_deal = false;
-    m_cx = double(x_sum) / double(scored.size()) + 0.5;
-    m_cy = double(y_sum) / double(scored.size()) + 0.5;
-    m_incr = score_incr;
-}
-
-void ScoreState::draw(double)
-{
-    if (m_time <= 0) return;
-
-    glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->current_transform();
-    al_draw_textf(
-        m_context->m_const.score_font,
-        al_map_rgb_f(
-            m_context->m_const.score_color.r,
-            m_context->m_const.score_color.g,
-            m_context->m_const.score_color.b),
-        text_center.x, text_center.y,
-        ALLEGRO_ALIGN_CENTRE,
-        "+%d", m_incr);
-}
-
-void ScoreState::tick(double dt)
-{
-    if ((m_time -= dt) > 0)
-        return;
-
-    if (m_next_deal) {
-        t_transition_required = true;
-        if (m_context->m_var.m_board.free_fields() < m_context->m_const.deal_count_ingame) {
-            m_next_state.reset(new GameoverState { m_context });
-        } else {
-            m_next_state.reset(new DealState { m_context, m_context->m_const.deal_period });
+        for (const auto& change : changes) {
+            success |= m_context->m_var.m_board.find_streak(
+                    change,
+                    std::inserter(scored, begin(scored)),
+                    m_context->m_const.score_serie_min);
         }
 
-    } else {
-        t_transition_required = true;
-        if (m_context->m_var.m_board.free_fields() == 0)
-            m_next_state.reset(new GameoverState { m_context });
-        else
-            m_next_state.reset(new WaitBallState { m_context });
+        if (!success) {
+            m_context->m_var.m_streak = 0;
+            m_time = 0;
+            return;
+        }
 
+        ++m_context->m_var.m_streak;
+        m_time = m_context->m_const.score_period;
+
+        int x_sum = 0, y_sum = 0;
+        for (const auto& p : scored) {
+            m_context->m_var.m_board(p.first, p.second) = m_context->m_const.empty_field;
+            x_sum += p.first;
+            y_sum += p.second;
+        }
+
+        int score_incr = scored.size() * m_context->m_var.m_streak;
+        m_context->m_var.m_score += score_incr;
+
+        // Setup state for further phase.
+        m_next_deal = false;
+        m_cx = double(x_sum) / double(scored.size()) + 0.5;
+        m_cy = double(y_sum) / double(scored.size()) + 0.5;
+        m_incr = score_incr;
     }
-}
 
-std::shared_ptr<dick::StateNode> ScoreState::next_state()
+    void draw(double) override
+    {
+        if (m_time <= 0) return;
+
+        glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->current_transform();
+        al_draw_textf(
+            m_context->m_const.score_font,
+            al_map_rgb_f(
+                m_context->m_const.score_color.r,
+                m_context->m_const.score_color.g,
+                m_context->m_const.score_color.b),
+            text_center.x, text_center.y,
+            ALLEGRO_ALIGN_CENTRE,
+            "+%d", m_incr);
+    }
+
+    void tick(double dt) override
+    {
+        if ((m_time -= dt) > 0)
+            return;
+
+        if (m_next_deal) {
+            t_transition_required = true;
+            if (m_context->m_var.m_board.free_fields() < m_context->m_const.deal_count_ingame) {
+                m_next_state = make_gameover_state(m_context);
+            } else {
+                m_next_state = make_deal_state(m_context, m_context->m_const.deal_period);
+            }
+
+        } else {
+            t_transition_required = true;
+            if (m_context->m_var.m_board.free_fields() == 0) {
+                m_next_state = make_gameover_state(m_context);
+            } else {
+                m_next_state = make_wait_ball_state(m_context);
+            }
+        }
+    }
+
+    std::shared_ptr<dick::StateNode> next_state() override
+    {
+        return std::move(m_next_state);
+    }
+
+};
+
+std::shared_ptr<dick::StateNode> make_score_state(
+        KulkiContext* context,
+        const std::vector<std::pair<int, int>>& changes,
+        bool next_deal)
 {
-    return std::move(m_next_state);
+    return std::make_shared<ScoreState>(context, changes, next_deal);
 }

@@ -7,7 +7,7 @@ class WaitBallState : public dick::StateNode {
 
     KulkiContext* const m_context;
     bool m_usure_phase;
-    std::unique_ptr<dick::GUI::WidgetContainer> m_usure_rail;
+    std::unique_ptr<dick::GUI::Widget> m_usure_dialog;
     std::unique_ptr<dick::GUI::Widget> m_giveup_button;
     std::shared_ptr<StateNode> m_next_state;
 
@@ -29,53 +29,19 @@ public:
             )
         );
 
-        auto yes_no_rail = m_context->m_gui.make_container_rail(
-            dick::GUI::Direction::RIGHT,
-            30
-        );
-
-        yes_no_rail->insert(
-            m_context->m_gui.make_button_sized(
-                m_context->m_gui.make_label("Yes"),
+        m_usure_dialog = m_context->m_gui.make_dialog_yes_no(
+                "Give up?",
                 [this](){
                     t_transition_required = true;
                     m_next_state = make_gameover_state(m_context);
                 },
-                { 200, 75 }
-            )
-        );
-
-        yes_no_rail->insert(
-            m_context->m_gui.make_button_sized(
-                m_context->m_gui.make_label("No"),
                 [this](){
                     m_usure_phase = false;
                 },
-                { 200, 75 }
-            )
-        );
-
-        m_usure_rail = m_context->m_gui.make_container_rail(
-            dick::GUI::Direction::DOWN,
-            30,
-            {
-                context->m_const.screen_w / 2.0,
-                context->m_const.screen_h / 2.0
-            }
-        );
-
-        m_usure_rail->insert(
-            m_context->m_gui.make_label_ex(
-                "Are you sure?",
-                m_context->m_const.score_font
-            ),
-            dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER
-        );
-
-        m_usure_rail->insert(
-            std::move(yes_no_rail),
-            dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER
-        );
+                {
+                    context->m_const.screen_w / 2.0,
+                    context->m_const.screen_h / 2.0
+                });
     }
 
     void on_key(dick::Key key, bool down) override
@@ -97,7 +63,7 @@ public:
     void on_button(dick::Button button, bool down) override
     {
         if (down) {
-            m_usure_rail->on_click(button);
+            m_usure_dialog->on_click(button);
             m_giveup_button->on_click(button);
         }
 
@@ -115,9 +81,9 @@ public:
     void draw(double) override
     {
         if (m_usure_phase) {
-            m_usure_rail->draw();
+            m_usure_dialog->on_draw();
         } else {
-            m_giveup_button->draw();
+            m_giveup_button->on_draw();
         }
     }
 

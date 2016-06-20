@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <memory>
+#include <limits>
 #include <stdexcept>
 #include <functional>
 
@@ -31,18 +32,30 @@ struct Color {
 // Logging facilities
 // ==================
 
-#ifdef DICK_LOG_ENABLE
+#if DICK_LOG > 0
 #   include <cstdio>
-#   define LOG_MESSAGE(LOG_LEVEL, LOG_FORMAT, ...) printf("[" LOG_LEVEL "][%s] %s:%d : " LOG_FORMAT "\n", __func__, __FILE__, __LINE__, ##__VA_ARGS__)
-#   define LOG_TRACE(LOG_FORMAT, ...) LOG_MESSAGE("TRACE", LOG_FORMAT, ##__VA_ARGS__)
-#   define LOG_DEBUG(LOG_FORMAT, ...) LOG_MESSAGE("DEBUG", LOG_FORMAT, ##__VA_ARGS__)
-#   define LOG_WARNING(LOG_FORMAT, ...) LOG_MESSAGE("WARNING", LOG_FORMAT, ##__VA_ARGS__)
+#   define LOG_MESSAGE(LOG_LEVEL, LOG_FORMAT, ...) \
+        printf( \
+            "[" LOG_LEVEL "][%s] %s:%d : " LOG_FORMAT "\n", \
+            __func__, __FILE__, __LINE__, ##__VA_ARGS__)
 #   define LOG_ERROR(LOG_FORMAT, ...) LOG_MESSAGE("ERROR", LOG_FORMAT, ##__VA_ARGS__)
+#   if DICK_LOG > 1
+#       define LOG_WARNING(LOG_FORMAT, ...) LOG_MESSAGE("WARNING", LOG_FORMAT, ##__VA_ARGS__)
+#       if DICK_LOG > 2
+#           define LOG_DEBUG(LOG_FORMAT, ...) LOG_MESSAGE("DEBUG", LOG_FORMAT, ##__VA_ARGS__)
+#           if DICK_LOG > 3
+#               define LOG_TRACE(LOG_FORMAT, ...) LOG_MESSAGE("TRACE", LOG_FORMAT, ##__VA_ARGS__)
+#           else
+#               define LOG_TRACE(...)
+#           endif
+#       else
+#           define LOG_DEBUG(...)
+#       endif
+#   else
+#       define LOG_WARNING(...)
+#   endif
 #else
 #   define LOG_TRACE(...)
-#   define LOG_DEBUG(...)
-#   define LOG_WARNING(...)
-#   define LOG_ERROR(...)
 #endif
 
 // Resources management
@@ -190,11 +203,11 @@ struct StateNode : public PlatformClient {
 
     // Make all client methods optional
     bool is_over() const override { return t_is_over; }
-    virtual void on_key(Key key, bool down) override {}
-    virtual void on_button(Button button, bool down) override {}
-    virtual void on_cursor(DimScreen position) override {}
-    virtual void tick(double dt) override {}
-    virtual void draw(double weight) override {}
+    virtual void on_key(Key, bool) override {}
+    virtual void on_button(Button, bool) override {}
+    virtual void on_cursor(DimScreen) override {}
+    virtual void tick(double) override {}
+    virtual void draw(double) override {}
 
     // Transition mechanics
     bool transition_required() const { return t_transition_required; }
@@ -254,6 +267,7 @@ struct GUIImpl;
 // type erased GUI elements factory, storing some common configuration shared
 // between all the widget types that is silently passed to the concrete
 // widget constructors maintaining clear API on the surface.
+
 struct GUI {
 
     // This is a type of the most generic callback possible. Using the capturing
@@ -300,7 +314,8 @@ struct GUI {
     // Constants that define the common GUI scheme that aren't colors.
     struct LayoutScheme {
         double border_width;
-        DimScreen button_padding;
+        DimScreen widget_padding;
+        DimScreen dialog_spacing;
     };
 
     struct Widget {
@@ -310,22 +325,29 @@ struct GUI {
         // widgets. They define the look and feel as well as provide the
         // information from the outside world:
 
+        void *t_default_font;
         std::shared_ptr<ColorScheme> t_color_scheme;
         std::shared_ptr<LayoutScheme> t_layout_scheme;
         std::shared_ptr<InputState> t_input_state;
 
         // Common property of all the widgets.
+
         DimScreen t_offset { 0, 0 };
+        std::string t_instance_name;
 
     public:
-        Widget(const std::shared_ptr<ColorScheme>& color_scheme,
+        Widget(void *default_font,
+               const std::shared_ptr<ColorScheme>& color_scheme,
                const std::shared_ptr<LayoutScheme>& layout_scheme,
                const std::shared_ptr<InputState>& input_state,
-               const DimScreen& offset) :
+               const DimScreen& offset,
+               const std::string& instance_name) :
+            t_default_font { default_font },
             t_color_scheme { color_scheme },
             t_layout_scheme { layout_scheme },
             t_input_state { input_state },
-            t_offset(offset)
+            t_offset(offset),
+            t_instance_name { instance_name }
         {}
 
         virtual ~Widget() {}
@@ -333,42 +355,83 @@ struct GUI {
         // Inversion of control for the regular GUI stuff:
 
         virtual void on_click(Button) {}
-        virtual void draw() {}
+        virtual void on_draw() {}
+        void debug_draw() const;
+        void debug_print(int recursion_level = 0) const;
 
         // Layout and alignment control via the sizes and offsets.
 
-        virtual DimScreen get_size() const { return { 0, 0 }; }
-
         const DimScreen& get_offset() const { return t_offset; }
         virtual void set_offset(const DimScreen& offset) { t_offset = offset; }
+        virtual std::pair<DimScreen, DimScreen> get_rect() const;
+        virtual DimScreen get_size() const;
 
         // Helper algorithms:
 
         virtual bool point_in(const DimScreen& point) const;
         static DimScreen align(DimScreen origin, const DimScreen& size, int alignment);
+
+        // Compile-time type inference
+
+        virtual const std::string &get_type_name() const = 0;
+        const std::string &get_instance_name() const { return t_instance_name; }
+        void set_instance_name(const std::string& name) { t_instance_name = name; }
     };
 
     // An extension to the Widget concept in the way that it allows for storing
     // other widgets and perform aggregated operations on all of its children.
     struct WidgetContainer : public Widget {
-        virtual ~WidgetContainer() {}
+
         WidgetContainer(
+                void *default_font,
                 const std::shared_ptr<ColorScheme>& color_scheme,
                 const std::shared_ptr<LayoutScheme>& layout_scheme,
                 const std::shared_ptr<InputState>& input_state,
-                const DimScreen& offset) :
-            Widget { color_scheme, layout_scheme, input_state, offset }
+                const DimScreen& offset,
+                const std::string& instance_name) :
+            Widget { default_font, color_scheme, layout_scheme, input_state, offset, instance_name }
         {}
-        virtual void insert(std::unique_ptr<Widget> widget, int alignment = 0) = 0;
+
+        virtual ~WidgetContainer() {}
+
+        // The methods added by the WidgetContainer class to the Widget concept:
+
+        virtual void insert(
+            std::unique_ptr<Widget> widget,
+            int alignment = Alignment::TOP | Alignment::LEFT) = 0;
         virtual void remove(Widget* widget) = 0;
-        virtual bool contains(Widget* widget) = 0;
         virtual void clear() = 0;
+        virtual bool contains(Widget* widget);
+
+        // Commonly overridden Widget API
+
+        virtual void on_click(Button) override;
+        virtual void on_draw() override;
+        virtual void set_offset(const DimScreen &offset) override;
+        virtual std::pair<DimScreen, DimScreen> get_rect() const override;
+
+        // Helpers assuming the container has the children stored in an iterable
+        // range.
+
+        virtual void visit_children(std::function<void(Widget&)> callback) = 0;
+        virtual void visit_children(std::function<void(const Widget&)> callback) const = 0;
+
+        void visit_descendants(std::function<void(Widget&)> callback);
+        void visit_descendants(std::function<void(const Widget&)> callback) const;
     };
+
+    // The actual GUI implementation
 
     GUIImpl *m_impl;
 
     GUI(const std::shared_ptr<InputState>& input_state, Resources& resources);
     ~GUI();
+
+    // Widget constructors
+
+    std::unique_ptr<Widget> make_image(
+            void *image,
+            const DimScreen& offset = { 0, 0 });
 
     std::unique_ptr<Widget> make_label(
             const std::string& text,
@@ -390,12 +453,21 @@ struct GUI {
             const DimScreen& size,
             const DimScreen& offset = { 0, 0 });
 
+    std::unique_ptr<Widget> make_dialog_yes_no(
+            const std::string& question,
+            Callback on_yes,
+            Callback on_no,
+            const DimScreen& offset = { 0, 0 });
+
     std::unique_ptr<WidgetContainer> make_container_free(
+            const DimScreen& offset = { 0, 0 });
+
+    std::unique_ptr<WidgetContainer> make_container_panel(
             const DimScreen& offset = { 0, 0 });
 
     std::unique_ptr<WidgetContainer> make_container_rail(
             Direction::Enum direction,
-            double children_spacing,
+            double stride,
             const DimScreen& offset = { 0, 0 });
 };
 

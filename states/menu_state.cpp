@@ -76,7 +76,7 @@ public:
 
         m_button_rail = context->m_gui.make_container_rail(
             dick::GUI::Direction::DOWN,
-            30,
+            3 * text_height,
             {
                 context->m_const.screen_w / 2.0,
                 context->m_const.screen_h / 2.0
@@ -107,7 +107,7 @@ public:
 
     void draw(double) override
     {
-        m_button_rail->draw();
+        m_button_rail->on_draw();
     }
 
     std::shared_ptr<dick::StateNode> next_state() override

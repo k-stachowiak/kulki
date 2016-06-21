@@ -26,6 +26,9 @@ struct KulkiContext : public dick::PlatformClient {
     std::unique_ptr<dick::GUI::Widget> make_giveup_dialog(
             dick::GUI::Callback on_yes,
             dick::GUI::Callback on_no);
+    std::unique_ptr<dick::GUI::Widget> make_range_int_spin(
+            const std::string &name,
+            int *value, int min, int max);
 
     void draw_field(
             const glm::vec3& top_left,
@@ -85,4 +88,6 @@ std::shared_ptr<dick::StateNode> make_wait_dest_state(
         int src_x,
         int src_y);
 
+std::shared_ptr<dick::StateNode> make_options_state(
+        KulkiContext *context);
 #endif

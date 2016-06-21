@@ -25,6 +25,45 @@ glm::mat3 KulkiContext::current_transform()
     return scale(m_const.field_w) * translate(m_const.board_shift_x, m_const.board_shift_y);
 }
 
+std::unique_ptr<dick::GUI::Widget> KulkiContext::make_range_int_spin(
+        const std::string &name,
+        int *value, int min, int max)
+{
+    auto rail = m_gui.make_container_rail(
+        dick::GUI::Direction::RIGHT,
+        70.0);
+
+    rail->insert(
+        m_gui.make_label(name + ": " + std::to_string(*value)),
+        dick::GUI::Alignment::MIDDLE);
+
+    rail->insert(
+        m_gui.make_button(
+            m_gui.make_image(m_const.larrow_bmp),
+            [value, min, max]()
+            {
+                if (*value > min) {
+                    --(*value);
+                }
+            }),
+        dick::GUI::Alignment::MIDDLE);
+
+    rail->insert(
+        m_gui.make_button(
+            m_gui.make_image(m_const.rarrow_bmp),
+            [value, min, max]()
+            {
+                if (*value < max) {
+                    ++(*value);
+                }
+            }),
+        dick::GUI::Alignment::MIDDLE);
+
+    std::unique_ptr<dick::GUI::Widget> result = std::move(rail);
+
+    return result;
+}
+
 std::unique_ptr<dick::GUI::Widget> KulkiContext::make_score_label()
 {
     return m_gui.make_label_ex(

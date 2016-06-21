@@ -1,6 +1,5 @@
 // Copyright (C) 2015 Krzysztof Stachowiak
 
-#include <allegro5/allegro_primitives.h>
 #include <vector>
 #include <string>
 
@@ -12,33 +11,10 @@ class MenuState : public dick::StateNode {
     KulkiContext* m_context;
 
     const std::vector<std::pair<std::string, dick::GUI::Callback>> m_entries;
-    double m_width, m_height;
 
     std::unique_ptr<dick::GUI::WidgetContainer> m_button_rail;
 
     std::shared_ptr<StateNode> m_next_state;
-
-    std::pair<double, double> m_compute_dimensions()
-    {
-        const double height = al_get_font_line_height(m_context->m_const.menu_font);
-        const int n = m_entries.size();
-
-        std::vector<double> widths;
-        std::transform(
-            begin(m_entries), end(m_entries), std::back_inserter(widths),
-            [this](const auto& entry)
-            {
-                return al_get_text_width(m_context->m_const.menu_font, entry.first.c_str());
-            });
-
-        const double max_width = *std::max_element(begin(widths), end(widths));
-
-        return {
-            2.0 * (m_context->m_const.menu_padding + m_context->m_const.menu_margin) + max_width,
-            n * (height + 2.0 * m_context->m_const.menu_padding + m_context->m_const.menu_margin) +
-                m_context->m_const.menu_margin
-        };
-    }
 
     void m_on_new_game()
     {
@@ -56,6 +32,12 @@ class MenuState : public dick::StateNode {
         m_next_state = make_highscore_state(m_context, -1);
     }
 
+    void m_on_options()
+    {
+        t_transition_required = true;
+        m_next_state = make_options_state(m_context);
+    }
+
     void m_on_exit()
     {
         t_is_over = true;
@@ -67,33 +49,11 @@ public:
         m_entries {
             { "New game", std::bind(&MenuState::m_on_new_game, this) },
             { "High score", std::bind(&MenuState::m_on_high_score, this) },
+            { "Options", std::bind(&MenuState::m_on_options, this) },
             { "Exit", std::bind(&MenuState::m_on_exit, this) }
         }
     {
-        std::tie(m_width, m_height) = m_compute_dimensions();
-
         const double text_height = al_get_font_line_height(m_context->m_const.menu_font);
-
-        auto ball_settings_rail = context->m_gui.make_container_rail(
-            dick::GUI::Direction::RIGHT,
-            70.0);
-
-        ball_settings_rail->insert(
-            context->m_gui.make_label("Balls" + std::to_string(m_context->m_var.m_ball_count)),
-            dick::GUI::Alignment::MIDDLE);
-
-        ball_settings_rail->insert(
-            context->m_gui.make_button(
-                context->m_gui.make_image(m_context->m_const.larrow_bmp),
-                [](){}),
-            dick::GUI::Alignment::MIDDLE);
-
-        ball_settings_rail->insert(
-            context->m_gui.make_button(
-                context->m_gui.make_image(m_context->m_const.rarrow_bmp),
-                [](){}),
-            dick::GUI::Alignment::MIDDLE);
-
 
         m_button_rail = context->m_gui.make_container_rail(
             dick::GUI::Direction::DOWN,
@@ -108,15 +68,10 @@ public:
                 context->m_gui.make_button_sized(
                     context->m_gui.make_label_ex(entry, context->m_const.menu_font),
                     callback,
-                    { m_width, 2 * text_height }
-                ),
+                    { 100, 30 }),
                 dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER
             );
         }
-
-        m_button_rail->insert(
-            std::move(ball_settings_rail),
-            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
 
         m_button_rail->align(
             {

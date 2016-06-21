@@ -30,6 +30,7 @@ add_executable(kulki
     ./states/kulki_context.cpp
     ./states/score_state.cpp
     ./states/menu_state.cpp
+    ./states/options_state.cpp
     ./states/deal_state.cpp
     ./config.cpp
     ./main.cpp

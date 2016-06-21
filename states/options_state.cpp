@@ -16,7 +16,7 @@ class OptionsState : public dick::StateNode {
     {
         m_button_rail = m_context->m_gui.make_container_rail(
             dick::GUI::Direction::DOWN,
-            40.0);
+            60.0);
 
         m_button_rail->insert(
             m_context->make_range_int_spin(
@@ -46,6 +46,18 @@ public:
         m_context { context }
     {
         rebuild_button_rail();
+    }
+
+    void on_key(dick::Key key, bool down) override
+    {
+        if (!down) {
+            return;
+        }
+
+        if (key == dick::Key::ESCAPE) {
+            t_transition_required = true;
+            m_next_state = make_menu_state(m_context);
+        }
     }
 
     void on_button(dick::Button button, bool down) override

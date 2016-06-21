@@ -92,6 +92,7 @@ public:
             }
         }
     }
+
     void on_button(dick::Button button, bool down) override
     {
         if (!down) {

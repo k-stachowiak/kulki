@@ -68,7 +68,7 @@ public:
                 context->m_gui.make_button_sized(
                     context->m_gui.make_label_ex(entry, context->m_const.menu_font),
                     callback,
-                    { 100, 30 }),
+                    { 230, 70 }),
                 dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER
             );
         }
@@ -79,6 +79,17 @@ public:
                 context->m_const.screen_h / 2.0
             },
             dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER);
+    }
+
+    void on_key(dick::Key key, bool down) override
+    {
+        if (!down) {
+            return;
+        }
+
+        if (key == dick::Key::ESCAPE) {
+            t_is_over = true;
+        }
     }
 
     void on_button(dick::Button button, bool down) override

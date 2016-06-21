@@ -23,7 +23,7 @@ public:
 
         m_giveup_button->set_offset(
             dick::GUI::Widget::align(
-                { static_cast<double>(context->m_const.screen_w), 0.0 },
+                { static_cast<double>(context->m_const.screen_w) - 2, 0.0 + 4 },
                 m_giveup_button->get_size(),
                 dick::GUI::Alignment::TOP | dick::GUI::Alignment::RIGHT
             )
@@ -50,40 +50,45 @@ public:
             return;
         }
 
-        switch (key) {
-        case dick::Key::ESCAPE:
-            m_usure_phase = true;
-            break;
-
-        default:
-            break;
+        if (m_usure_phase) {
+            if (key == dick::Key::ENTER) {
+                t_transition_required = true;
+                m_next_state = make_gameover_state(m_context);
+            } else if (key == dick::Key::ESCAPE) {
+                m_usure_phase = false;
+            }
+        } else {
+            if (key == dick::Key::ESCAPE) {
+                m_usure_phase = true;
+            }
         }
     }
 
     void on_button(dick::Button button, bool down) override
     {
-        if (down) {
-            m_usure_dialog->on_click(button);
-            m_giveup_button->on_click(button);
-        }
-
-        if (!down || t_transition_required) {
+        if (!down) {
             return;
         }
-        int tx = m_context->m_var.m_cursor_tile.first;
-        int ty = m_context->m_var.m_cursor_tile.second;
-        if (m_context->m_var.m_board.has(tx, ty) && m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
-            t_transition_required = true;
-            m_next_state = make_wait_dest_state(m_context, tx, ty);
+
+        if (m_usure_phase) {
+            m_usure_dialog->on_click(button);
+        } else {
+            m_giveup_button->on_click(button);
+            int tx = m_context->m_var.m_cursor_tile.first;
+            int ty = m_context->m_var.m_cursor_tile.second;
+            if (m_context->m_var.m_board.has(tx, ty) &&
+                m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
+                    t_transition_required = true;
+                    m_next_state = make_wait_dest_state(m_context, tx, ty);
+            }
         }
     }
 
     void draw(double) override
     {
+        m_giveup_button->on_draw();
         if (m_usure_phase) {
             m_usure_dialog->on_draw();
-        } else {
-            m_giveup_button->on_draw();
         }
     }
 
@@ -91,7 +96,6 @@ public:
     {
         return std::move(m_next_state);
     }
-
 };
 
 std::shared_ptr<dick::StateNode> make_wait_ball_state(

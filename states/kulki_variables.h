@@ -6,6 +6,8 @@
 #include "board.h"
 #include "kulki_constants.h"
 
+class KulkiConfig;
+
 struct KulkiVariables {
 
     KulkiConstants &m_constants;
@@ -14,9 +16,10 @@ struct KulkiVariables {
     std::pair<int, int> m_cursor_tile;
     int m_score;
     int m_streak;
+    int m_ball_count;
     std::vector<int> m_next_deal;
 
-    KulkiVariables(KulkiConstants &constants);
+    KulkiVariables(KulkiConstants &constants, KulkiConfig& config);
     void gen_next_deal(int count);
 };
 

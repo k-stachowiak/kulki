@@ -74,13 +74,30 @@ public:
 
         const double text_height = al_get_font_line_height(m_context->m_const.menu_font);
 
+        auto ball_settings_rail = context->m_gui.make_container_rail(
+            dick::GUI::Direction::RIGHT,
+            70.0);
+
+        ball_settings_rail->insert(
+            context->m_gui.make_label("Balls" + std::to_string(m_context->m_var.m_ball_count)),
+            dick::GUI::Alignment::MIDDLE);
+
+        ball_settings_rail->insert(
+            context->m_gui.make_button(
+                context->m_gui.make_image(m_context->m_const.larrow_bmp),
+                [](){}),
+            dick::GUI::Alignment::MIDDLE);
+
+        ball_settings_rail->insert(
+            context->m_gui.make_button(
+                context->m_gui.make_image(m_context->m_const.rarrow_bmp),
+                [](){}),
+            dick::GUI::Alignment::MIDDLE);
+
+
         m_button_rail = context->m_gui.make_container_rail(
             dick::GUI::Direction::DOWN,
-            3 * text_height,
-            {
-                context->m_const.screen_w / 2.0,
-                context->m_const.screen_h / 2.0
-            });
+            2.5 * text_height);
 
         for (decltype(m_entries)::size_type i = 0; i < m_entries.size(); ++i) {
 
@@ -93,9 +110,20 @@ public:
                     callback,
                     { m_width, 2 * text_height }
                 ),
-                dick::GUI::Alignment::BOTTOM | dick::GUI::Alignment::CENTER
+                dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER
             );
         }
+
+        m_button_rail->insert(
+            std::move(ball_settings_rail),
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+
+        m_button_rail->align(
+            {
+                context->m_const.screen_w / 2.0,
+                context->m_const.screen_h / 2.0
+            },
+            dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER);
     }
 
     void on_button(dick::Button button, bool down) override

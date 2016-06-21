@@ -11,7 +11,7 @@
 
 KulkiContext::KulkiContext(KulkiConfig &config) :
     m_const { m_resources, config },
-    m_var { m_const },
+    m_var { m_const, config },
     m_input_state { new dick::InputState },
     m_gui {
         m_input_state,
@@ -37,13 +37,9 @@ std::unique_ptr<dick::GUI::Widget> KulkiContext::make_giveup_button(
         dick::GUI::Callback on_click)
 {
     auto result = m_gui.make_button(m_gui.make_label("Give up"), on_click);
-    result->set_offset(
-        dick::GUI::Widget::align(
-            { static_cast<double>(m_const.screen_w) - 2, 0.0 + 4 },
-            result->get_size(),
-            dick::GUI::Alignment::TOP | dick::GUI::Alignment::RIGHT
-        )
-    );
+    result->align(
+        { static_cast<double>(m_const.screen_w) - 2, 0.0 + 4 },
+        dick::GUI::Alignment::TOP | dick::GUI::Alignment::RIGHT);
     return result;
 }
 
@@ -51,13 +47,20 @@ std::unique_ptr<dick::GUI::Widget> KulkiContext::make_giveup_dialog(
         dick::GUI::Callback on_yes,
         dick::GUI::Callback on_no)
 {
-    return m_gui.make_dialog_yes_no(
+    auto result = m_gui.make_dialog_yes_no(
         "Give up?",
         on_yes, on_no,
         {
             m_const.screen_w / 2.0,
             m_const.screen_h / 2.0
         });
+    result->align(
+        {
+            static_cast<double>(m_const.screen_w / 2),
+            static_cast<double>(m_const.screen_h / 2)
+        },
+        dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER);
+    return result;
 }
 
 void KulkiContext::draw_field(

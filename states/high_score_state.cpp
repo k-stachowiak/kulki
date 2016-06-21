@@ -29,7 +29,7 @@ public:
     HighScoreState(KulkiContext* context, int score) :
         m_context { context },
         m_high_score { HighScore::load("high_score", m_context->m_const.highscore_max_entries) },
-        m_balls { m_context->m_const.ball_count },
+        m_balls { m_context->m_var.m_ball_count },
         m_score { score }
     {
         if (score != -1 && m_high_score.can_insert(m_balls, m_score)) {

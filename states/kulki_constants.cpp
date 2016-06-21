@@ -15,9 +15,10 @@ KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) 
     menu_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
     ball_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/ball2.png") },
     tile_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/tile.png") },
+    rarrow_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/rarrow.png") },
+    larrow_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/larrow.png") },
 
     ball_colors { config.get_color_range("BALL_COLORS") },
-    ball_count { config.get_integer("COLOR_COUNT") },
 
     screen_w { config.get_integer("SCREEN_W") },
     screen_h { config.get_integer("SCREEN_H") },
@@ -58,6 +59,4 @@ KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) 
     score_color(config.get_color("SCORE_COLOR")),
 
     bump_period { config.get_real("BUMP_PERIOD") }
-{
-    assert(ball_count <= static_cast<int>(ball_colors.size()));
-}
+{}

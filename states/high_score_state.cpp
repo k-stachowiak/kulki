@@ -120,11 +120,7 @@ public:
         const double line_height = text_height + 15;
         double y;
 
-        ALLEGRO_BITMAP *target = al_get_target_bitmap();
-        al_draw_filled_rectangle(0, 0,
-                al_get_bitmap_width(target),
-                al_get_bitmap_height(target),
-                al_map_rgba_f(0, 0, 0, 0.333));
+        m_context->draw_veil();
 
         switch (m_phase) {
         case HIGH_SCORE_INPUT:

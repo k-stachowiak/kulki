@@ -107,6 +107,10 @@ public:
 
     void draw(double) override
     {
+        if (m_usure_phase) {
+            m_context->draw_veil();
+        }
+
         double x1 = m_path[0].first;
         double y1 = m_path[0].second;
         double x2 = m_path[1].first;

@@ -192,6 +192,15 @@ void KulkiContext::draw_board(const Board& b, const glm::mat3& transf)
     }
 }
 
+void KulkiContext::draw_veil()
+{
+    ALLEGRO_BITMAP *target = al_get_target_bitmap();
+    al_draw_filled_rectangle(0, 0,
+            al_get_bitmap_width(target),
+            al_get_bitmap_height(target),
+            al_map_rgba_f(0, 0, 0, 0.333));
+}
+
 bool KulkiContext::is_over() const
 {
     return m_machine.is_over();

@@ -1,10 +1,9 @@
 TODO
 ====
-- User experience:
-    - zmiana liczby kulek w wynikach GUI
-    - kółko odliczające czas pokazywania wyników
-- Błąd: wybrać kulkę -> kliknąć poza planszą
+- kółko odliczające czas pokazywania wyników (czas do przełączenia ekranu)
 - Zmienić czcionkę na jakąś normalną
 - Nie działa wpisywanie high score
-- Dodać ekran opcji
+- Zapisywalne opcje
 - Dodać operacje hsv-rgb do skryptu konfiguracyjnego
+- Input imienia wstawia złe znaki
+- Wydłużyć pokazywanie punktów po zbiciu - dodać efekty, żeby było toto widać.

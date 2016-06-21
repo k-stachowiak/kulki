@@ -48,6 +48,8 @@ struct KulkiContext : public dick::PlatformClient {
             const Board& b,
             const glm::mat3& transf);
 
+    void draw_veil();
+
     bool is_over() const override;
     void on_key(dick::Key key, bool down) override;
     void on_button(dick::Button button, bool down) override;

@@ -68,8 +68,10 @@ public:
             m_giveup_button->on_click(button);
             int tx = m_context->m_var.m_cursor_tile.first;
             int ty = m_context->m_var.m_cursor_tile.second;
-            if (m_context->m_var.m_board.has(tx, ty) &&
-                m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
+            if (!m_context->m_var.m_board.has(tx, ty)) {
+                return;
+            }
+            if (m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
                     t_transition_required = true;
                     m_next_state = make_wait_dest_state(m_context, tx, ty);
             }
@@ -78,6 +80,10 @@ public:
 
     void draw(double) override
     {
+        if (m_usure_phase) {
+            m_context->draw_veil();
+        }
+
         m_score_label->on_draw();
         m_giveup_button->on_draw();
 

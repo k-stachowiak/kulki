@@ -41,6 +41,7 @@ public:
 
     void draw(double) override
     {
+        m_context->draw_veil();
         al_draw_text(
             m_context->m_const.gameover_font,
             al_map_rgb_f(

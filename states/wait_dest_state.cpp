@@ -75,6 +75,7 @@ public:
         if (m_usure_phase) {
             m_usure_dialog->on_click(button);
         } else {
+            m_giveup_button->on_click(button);
 
             if (button != dick::Button::BUTTON_1) {
                 return;
@@ -82,6 +83,10 @@ public:
 
             int tx = m_context->m_var.m_cursor_tile.first;
             int ty = m_context->m_var.m_cursor_tile.second;
+
+            if (!m_context->m_var.m_board.has(tx, ty)) {
+                return;
+            }
 
             if (m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
 
@@ -131,6 +136,10 @@ public:
 
     void draw(double) override
     {
+        if (m_usure_phase) {
+            m_context->draw_veil();
+        }
+
         double bmp_factor = double(m_time) / m_context->m_const.bump_period * 3.14;
         double sqz_factor = double(m_time) / m_context->m_const.bump_period * 2.0 * 3.14;
 

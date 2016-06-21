@@ -127,6 +127,9 @@ public:
 
     void draw(double) override
     {
+        if (m_usure_phase) {
+            m_context->draw_veil();
+        }
         double squeeze = 1.0 - double(m_time) / m_context->m_const.deal_period;
         double x = double(m_current_x) + 0.5;
         double y = double(m_current_y) + 0.5;

@@ -70,6 +70,7 @@ public:
 
     void draw(double) override
     {
+        m_context->draw_veil();
         m_button_rail->on_draw();
     }
 

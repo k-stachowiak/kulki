@@ -25,6 +25,41 @@ glm::mat3 KulkiContext::current_transform()
     return scale(m_const.field_w) * translate(m_const.board_shift_x, m_const.board_shift_y);
 }
 
+std::unique_ptr<dick::GUI::Widget> KulkiContext::make_score_label()
+{
+    return m_gui.make_label_ex(
+        "Score : " + std::to_string(m_var.m_score),
+        m_const.score_font,
+        { 4, 4 });
+}
+
+std::unique_ptr<dick::GUI::Widget> KulkiContext::make_giveup_button(
+        dick::GUI::Callback on_click)
+{
+    auto result = m_gui.make_button(m_gui.make_label("Give up"), on_click);
+    result->set_offset(
+        dick::GUI::Widget::align(
+            { static_cast<double>(m_const.screen_w) - 2, 0.0 + 4 },
+            result->get_size(),
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::RIGHT
+        )
+    );
+    return result;
+}
+
+std::unique_ptr<dick::GUI::Widget> KulkiContext::make_giveup_dialog(
+        dick::GUI::Callback on_yes,
+        dick::GUI::Callback on_no)
+{
+    return m_gui.make_dialog_yes_no(
+        "Give up?",
+        on_yes, on_no,
+        {
+            m_const.screen_w / 2.0,
+            m_const.screen_h / 2.0
+        });
+}
+
 void KulkiContext::draw_field(
         const glm::vec3& top_left,
         const glm::vec3& bot_right,
@@ -158,16 +193,6 @@ void KulkiContext::draw(double weight)
                 m_const.bg_color.r,
                 m_const.bg_color.g,
                 m_const.bg_color.b));
-
-    al_draw_textf(m_const.score_font,
-            al_map_rgb_f(
-                m_const.score_color.r,
-                m_const.score_color.g,
-                m_const.score_color.b),
-            m_const.score_shift_x,
-            m_const.score_shift_y,
-            ALLEGRO_ALIGN_LEFT,
-            "Score : %d", m_var.m_score);
 
     int next_fields_to_draw = std::max(
             m_const.deal_count_ingame,

@@ -21,6 +21,12 @@ struct KulkiContext : public dick::PlatformClient {
 
     glm::mat3 current_transform();
 
+    std::unique_ptr<dick::GUI::Widget> make_score_label();
+    std::unique_ptr<dick::GUI::Widget> make_giveup_button(dick::GUI::Callback on_click);
+    std::unique_ptr<dick::GUI::Widget> make_giveup_dialog(
+            dick::GUI::Callback on_yes,
+            dick::GUI::Callback on_no);
+
     void draw_field(
             const glm::vec3& top_left,
             const glm::vec3& bot_right,

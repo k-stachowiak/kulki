@@ -10,6 +10,11 @@ class WaitDestState : public dick::StateNode {
     int m_color;
     double m_time;
 
+    bool m_usure_phase;
+    std::unique_ptr<dick::GUI::Widget> m_score_label;
+    std::unique_ptr<dick::GUI::Widget> m_usure_dialog;
+    std::unique_ptr<dick::GUI::Widget> m_giveup_button;
+
     std::shared_ptr<StateNode> m_next_state;
 
 public:
@@ -17,68 +22,111 @@ public:
         m_context { context },
         m_src_x { src_x },
         m_src_y { src_y },
-        m_color { context->m_var.m_board(src_x, src_y) }
+        m_color { context->m_var.m_board(src_x, src_y) },
+        m_usure_phase { false }
     {
+        m_score_label = m_context->make_score_label();
+        m_giveup_button = m_context->make_giveup_button(
+            [this]()
+            {
+                m_usure_phase = true;
+            });
+
+        m_usure_dialog = m_context->make_giveup_dialog(
+            [this]()
+            {
+                t_transition_required = true;
+                m_next_state = make_gameover_state(m_context);
+            },
+            [this]()
+            {
+                m_usure_phase = false;
+            });
+
         m_context->m_var.m_board(src_x, src_y) = m_context->m_const.empty_field;
     }
 
     void on_key(dick::Key key, bool down) override
     {
-        if (down && key == dick::Key::ESCAPE) {
-            t_transition_required = true;
-            m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
-            m_next_state = make_wait_ball_state(m_context);
+        if (!down) {
+            return;
+        }
+
+        if (m_usure_phase) {
+            if (key == dick::Key::ENTER) {
+                t_transition_required = true;
+                m_next_state = make_gameover_state(m_context);
+            } else if (key == dick::Key::ESCAPE) {
+                m_usure_phase = false;
+            }
+        } else {
+            if (key == dick::Key::ESCAPE) {
+                m_usure_phase = true;
+            }
         }
     }
 
-    void on_button(dick::Button, bool down) override
+    void on_button(dick::Button button, bool down) override
     {
         if (!down) {
             return;
         }
 
-        int tx = m_context->m_var.m_cursor_tile.first;
-        int ty = m_context->m_var.m_cursor_tile.second;
-
-        if (m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
-
-            // Restore current ball
-            m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
-
-            // Remember new ball
-            m_src_x = tx;
-            m_src_y = ty;
-            m_color = m_context->m_var.m_board(tx, ty);
-
-            // Remove new ball from board
-            m_context->m_var.m_board(m_src_x, m_src_y) = m_context->m_const.empty_field;
-            return;
-        }
-
-        if (tx == m_src_x && ty == m_src_y) {
-            m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
-            t_transition_required = true;
-            m_next_state = make_wait_ball_state(m_context);
-
+        if (m_usure_phase) {
+            m_usure_dialog->on_click(button);
         } else {
-            std::deque<std::pair<int, int>> path;
-            if (m_context->m_var.m_board.find_path({ m_src_x, m_src_y }, { tx, ty }, path)) {
+
+            if (button != dick::Button::BUTTON_1) {
+                return;
+            }
+
+            int tx = m_context->m_var.m_cursor_tile.first;
+            int ty = m_context->m_var.m_cursor_tile.second;
+
+            if (m_context->m_var.m_board(tx, ty) != m_context->m_const.empty_field) {
+
+                // Restore current ball
+                m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
+
+                // Remember new ball
+                m_src_x = tx;
+                m_src_y = ty;
+                m_color = m_context->m_var.m_board(tx, ty);
+
+                // Remove new ball from board
+                m_context->m_var.m_board(m_src_x, m_src_y) = m_context->m_const.empty_field;
+                return;
+            }
+
+            if (tx == m_src_x && ty == m_src_y) {
+                m_context->m_var.m_board(m_src_x, m_src_y) = m_color;
                 t_transition_required = true;
-                m_next_state = make_move_state(
-                    m_context,
-                    std::move(path),
-                    m_context->m_const.move_period,
-                    tx, ty,
-                    m_color
-                );
+                m_next_state = make_wait_ball_state(m_context);
+
+            } else {
+                std::deque<std::pair<int, int>> path;
+                if (m_context->m_var.m_board.find_path({ m_src_x, m_src_y }, { tx, ty }, path)) {
+                    t_transition_required = true;
+                    m_next_state = make_move_state(
+                        m_context,
+                        std::move(path),
+                        m_context->m_const.move_period,
+                        tx, ty,
+                        m_color
+                    );
+                }
             }
         }
     }
 
     void tick(double dt) override
     {
-        m_time += dt;
-        m_time = fmod(m_time, m_context->m_const.bump_period);
+        if (m_usure_phase) {
+            // nop
+        } else {
+            m_time += dt;
+            m_time = fmod(m_time, m_context->m_const.bump_period);
+        }
     }
 
     void draw(double) override
@@ -92,6 +140,12 @@ public:
         double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
         m_context->draw_ball(x, y, m_color, m_context->m_const.ball_radius, squeeze, m_context->current_transform());
+
+        m_score_label->on_draw();
+        m_giveup_button->on_draw();
+        if (m_usure_phase) {
+            m_usure_dialog->on_draw();
+        }
     }
 
     std::shared_ptr<dick::StateNode> next_state() override

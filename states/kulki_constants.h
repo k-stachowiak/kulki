@@ -47,7 +47,6 @@ struct KulkiConstants {
     int deal_count_init;
     int deal_count_ingame;
 
-    double gameover_period;
     int gameover_shift_x;
     int gameover_shift_y;
 

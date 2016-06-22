@@ -29,7 +29,7 @@ class MenuState : public dick::StateNode {
     {
         m_context->m_var.m_score = -1;
         t_transition_required = true;
-        m_next_state = make_highscore_state(m_context, -1);
+        m_next_state = make_highscore_display_state(m_context);
     }
 
     void m_on_options()

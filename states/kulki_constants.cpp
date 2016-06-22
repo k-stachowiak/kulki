@@ -36,7 +36,6 @@ KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) 
     deal_count_init { config.get_integer("DEAL_COUNT_INIT") },
     deal_count_ingame { config.get_integer("DEAL_COUNT_INGAME") },
 
-    gameover_period { config.get_real("GAMEOVER_PERIOD") },
     gameover_shift_x { config.get_integer("GAMEOVER_SHIFT_X") },
     gameover_shift_y { config.get_integer("GAMEOVER_SHIFT_Y") },
 

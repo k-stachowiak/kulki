@@ -22,7 +22,8 @@ add_executable(kulki
     ./model/high_score.cpp
     ./states/kulki_constants.cpp
     ./states/kulki_variables.cpp
-    ./states/high_score_state.cpp
+    ./states/high_score_display_state.cpp
+    ./states/high_score_input_state.cpp
     ./states/game_over_state.cpp
     ./states/wait_dest_state.cpp
     ./states/move_state.cpp

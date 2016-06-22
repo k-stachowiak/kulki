@@ -10,6 +10,9 @@ class WaitBallState : public dick::StateNode {
     std::unique_ptr<dick::GUI::Widget> m_score_label;
     std::unique_ptr<dick::GUI::Widget> m_usure_dialog;
     std::unique_ptr<dick::GUI::Widget> m_giveup_button;
+
+    std::unique_ptr<dick::GUI::WidgetContainer> m_debug_rail;
+
     std::shared_ptr<StateNode> m_next_state;
 
 public:
@@ -18,6 +21,7 @@ public:
         m_usure_phase { false }
     {
         m_score_label = m_context->make_score_label();
+
         m_giveup_button = m_context->make_giveup_button(
             [this]()
             {
@@ -34,6 +38,22 @@ public:
             {
                 m_usure_phase = false;
             });
+
+        m_debug_rail = m_context->m_gui.make_container_rail(dick::GUI::Direction::DOWN, 200);
+
+        m_debug_rail->insert(
+            m_context->m_gui.make_button(
+                m_context->m_gui.make_label("End with high score"),
+                [this]()
+                {
+                    m_context->m_var.m_score = 1000;
+                    t_transition_required = true;
+                    m_next_state = make_gameover_state(m_context);
+                }),
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::RIGHT);
+        m_debug_rail->align(
+            { m_context->m_const.screen_w - 4.0, 100.0 },
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::RIGHT);
     }
 
     void on_key(dick::Key key, bool down) override
@@ -65,6 +85,7 @@ public:
         if (m_usure_phase) {
             m_usure_dialog->on_click(button);
         } else {
+            m_debug_rail->on_click(button);
             m_giveup_button->on_click(button);
             int tx = m_context->m_var.m_cursor_tile.first;
             int ty = m_context->m_var.m_cursor_tile.second;
@@ -85,6 +106,7 @@ public:
         }
 
         m_score_label->on_draw();
+        m_debug_rail->on_draw();
         m_giveup_button->on_draw();
 
         if (m_usure_phase) {

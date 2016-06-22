@@ -65,9 +65,11 @@ std::shared_ptr<dick::StateNode> make_deal_state(
 std::shared_ptr<dick::StateNode> make_gameover_state(
         KulkiContext *context);
 
-std::shared_ptr<dick::StateNode> make_highscore_state(
-        KulkiContext *context,
-        int score);
+std::shared_ptr<dick::StateNode> make_highscore_display_state(
+        KulkiContext *context);
+
+std::shared_ptr<dick::StateNode> make_highscore_input_state(
+        KulkiContext *context);
 
 std::shared_ptr<dick::StateNode> make_menu_state(
         KulkiContext *context);

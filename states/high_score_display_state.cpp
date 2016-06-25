@@ -54,27 +54,48 @@ class HighScoreDisplayState : public dick::StateNode {
         return result;
     }
 
-    std::unique_ptr<dick::GUI::Widget> m_make_score_rail()
+    std::unique_ptr<dick::GUI::Widget> m_make_score_container()
     {
         const double text_height = al_get_font_line_height(m_context->m_const.menu_font);
+        double max_width = 0;
 
         std::vector<HighScoreEntry> entries =
             m_high_score.get_entries_for_balls(
                 m_ball_counts[m_ball_index]);
         std::reverse(begin(entries), end(entries));
 
-        auto rail = m_context->m_gui.make_container_rail(
+        auto name_rail = m_context->m_gui.make_container_rail(
+                dick::GUI::Direction::DOWN,
+                text_height * 1.125);
+
+        auto score_rail = m_context->m_gui.make_container_rail(
                 dick::GUI::Direction::DOWN,
                 text_height * 1.125);
 
         for (const auto& entry: entries) {
-            rail->insert(
+            double name_width = al_get_text_width(
+                    m_context->m_const.menu_font,
+                    entry.name.c_str());
+            if (name_width > max_width) {
+                max_width = name_width;
+            }
+            name_rail->insert(
                 m_context->m_gui.make_label_ex(
-                    entry.name + " " + std::to_string(entry.score),
+                    entry.name,
+                    m_context->m_const.menu_font));
+            score_rail->insert(
+                m_context->m_gui.make_label_ex(
+                    std::to_string(entry.score),
                     m_context->m_const.menu_font));
         }
 
-        std::unique_ptr<dick::GUI::Widget> result = std::move(rail);
+        score_rail->set_offset({ 1.5 * max_width, 0.0 });
+
+        auto container = m_context->m_gui.make_container_free();
+        container->insert(std::move(name_rail));
+        container->insert(std::move(score_rail));
+
+        std::unique_ptr<dick::GUI::Widget> result = std::move(container);
 
         return result;
     }
@@ -86,7 +107,7 @@ class HighScoreDisplayState : public dick::StateNode {
             { m_context->m_const.screen_w / 2.0, 70.0 },
             dick::GUI::Alignment::CENTER | dick::GUI::Alignment::TOP);
 
-        auto content_widget = m_make_score_rail();
+        auto content_widget = m_make_score_container();
         content_widget->align(
             {
                 m_context->m_const.screen_w / 2.0,

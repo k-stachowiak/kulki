@@ -22,19 +22,19 @@ class OptionsState : public dick::StateNode {
             m_context->make_range_int_spin_ex(
                 "Balls", &m_context->m_var.m_ball_count, 3, 8,
                 m_context->m_const.menu_font),
-            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
         m_button_rail->insert(
             m_context->make_range_int_spin_ex(
                 "Board width", &m_context->m_var.m_board_width, 5, 9,
                 m_context->m_const.menu_font),
-            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
         m_button_rail->insert(
             m_context->make_range_int_spin_ex(
                 "Board height", &m_context->m_var.m_board_height, 5, 9,
                 m_context->m_const.menu_font),
-            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
         m_button_rail->insert(
             m_context->m_gui.make_button(
@@ -45,7 +45,7 @@ class OptionsState : public dick::StateNode {
                     t_transition_required = true;
                     m_next_state = make_menu_state(m_context);
                 }),
-            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
         m_button_rail->align(
             {

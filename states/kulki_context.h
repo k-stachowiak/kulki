@@ -26,6 +26,9 @@ struct KulkiContext : public dick::PlatformClient {
     std::unique_ptr<dick::GUI::Widget> make_giveup_dialog(
             dick::GUI::Callback on_yes,
             dick::GUI::Callback on_no);
+    std::unique_ptr<dick::GUI::Widget> make_range_int_spin_ex(
+            const std::string &name,
+            int *value, int min, int max, void *font);
     std::unique_ptr<dick::GUI::Widget> make_range_int_spin(
             const std::string &name,
             int *value, int min, int max);

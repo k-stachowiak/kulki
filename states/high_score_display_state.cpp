@@ -11,20 +11,121 @@ class HighScoreDisplayState : public dick::StateNode {
 
     KulkiContext* const m_context;
 
+    std::unique_ptr<dick::GUI::WidgetContainer> m_ui;
+
     HighScore m_high_score;
 
     std::vector<int> m_ball_counts;
+    int m_ball_index;
     double m_period;
     double m_timer;
+
+    std::unique_ptr<dick::GUI::Widget> m_make_ball_spin()
+    {
+        auto larrow = m_context->m_gui.make_button(
+            m_context->m_gui.make_image(m_context->m_const.larrow_bmp),
+            [this]()
+            {
+                m_ball_index = (m_ball_index - 1) % m_ball_counts.size();
+            });
+
+        auto rarrow = m_context->m_gui.make_button(
+            m_context->m_gui.make_image(m_context->m_const.rarrow_bmp),
+            [this]()
+            {
+                m_ball_index = (m_ball_index + 1) % m_ball_counts.size();
+            });
+
+        auto rail = m_context->m_gui.make_container_rail(
+            dick::GUI::Direction::RIGHT,
+            rarrow->get_size().x * 1.25);
+
+        rail->insert(std::move(larrow), dick::GUI::Alignment::MIDDLE);
+        rail->insert(std::move(rarrow), dick::GUI::Alignment::MIDDLE);
+
+        rail->insert(
+            m_context->m_gui.make_label_ex(
+                std::to_string(m_ball_counts[m_ball_index]) + " balls",
+                m_context->m_const.menu_font),
+            dick::GUI::Alignment::MIDDLE);
+
+        std::unique_ptr<dick::GUI::Widget> result = std::move(rail);
+
+        return result;
+    }
+
+    std::unique_ptr<dick::GUI::Widget> m_make_score_rail()
+    {
+        const double text_height = al_get_font_line_height(m_context->m_const.menu_font);
+
+        std::vector<HighScoreEntry> entries =
+            m_high_score.get_entries_for_balls(
+                m_ball_counts[m_ball_index]);
+        std::reverse(begin(entries), end(entries));
+
+        auto rail = m_context->m_gui.make_container_rail(
+                dick::GUI::Direction::DOWN,
+                text_height * 1.125);
+
+        for (const auto& entry: entries) {
+            rail->insert(
+                m_context->m_gui.make_label_ex(
+                    entry.name + " " + std::to_string(entry.score),
+                    m_context->m_const.menu_font));
+        }
+
+        std::unique_ptr<dick::GUI::Widget> result = std::move(rail);
+
+        return result;
+    }
+
+    void m_rebuild_ui()
+    {
+        auto head_widget = m_make_ball_spin();
+        head_widget->align(
+            { m_context->m_const.screen_w / 2.0, 70.0 },
+            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::TOP);
+
+        auto content_widget = m_make_score_rail();
+        content_widget->align(
+            {
+                m_context->m_const.screen_w / 2.0,
+                m_context->m_const.screen_h / 2.0
+            },
+            dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER);
+
+        auto done_button = m_context->m_gui.make_button(
+            m_context->m_gui.make_label_ex(
+                "Done",
+                m_context->m_const.menu_font),
+            [this]()
+            {
+                t_transition_required = true;
+            });
+        done_button->align(
+            {
+                m_context->m_const.screen_w / 2.0,
+                m_context->m_const.screen_h - 70.0
+            },
+            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::BOTTOM);
+
+        m_ui = m_context->m_gui.make_container_free();
+        m_ui->insert(std::move(head_widget));
+        m_ui->insert(std::move(content_widget));
+        m_ui->insert(std::move(done_button));
+    }
 
 public:
     HighScoreDisplayState(KulkiContext* context) :
         m_context { context },
-        m_high_score { HighScore::load("high_score", m_context->m_const.highscore_max_entries) }
+        m_high_score { HighScore::load("high_score", m_context->m_const.highscore_max_entries) },
+        m_ball_counts { m_high_score.get_ball_counts() },
+        m_ball_index { 0 },
+        m_period { 5.0 },
+        m_timer { m_period }
     {
-        m_ball_counts = m_high_score.get_ball_counts();
-        m_period = 5.0;
-        m_timer = m_period;
+        std::sort(begin(m_ball_counts), end(m_ball_counts));
+        m_rebuild_ui();
     }
 
     void on_key(dick::Key, bool down) override
@@ -34,10 +135,12 @@ public:
         }
     }
 
-    void on_button(dick::Button, bool down) override
+    void on_button(dick::Button button, bool down) override
     {
         if (down) {
-            t_transition_required = true;
+            m_ui->on_click(button);
+            m_rebuild_ui();
+            m_timer = m_period;
         }
     }
 
@@ -46,52 +149,15 @@ public:
         m_timer -= dt;
         if (m_timer <= 0) {
             m_timer = m_period;
-            std::rotate(
-                begin(m_ball_counts),
-                begin(m_ball_counts) + 1,
-                end(m_ball_counts));
+            m_ball_index = (m_ball_index + 1) % m_ball_counts.size();
+            m_rebuild_ui();
         }
     }
 
     void draw(double) override
     {
-        const double text_height = al_get_font_line_height(m_context->m_const.menu_font);
-        const double line_height = text_height + 15;
-        double y;
-
         m_context->draw_veil();
-
-        std::vector<HighScoreEntry> entries = m_high_score.get_entries_for_balls(m_ball_counts.front());
-        std::reverse(begin(entries), end(entries));
-
-        y = m_context->m_const.screen_h / 2 - (entries.size() / 2) * line_height;
-
-        al_draw_textf(
-            m_context->m_const.menu_font,
-            al_map_rgb_f(1, 1, 1),
-            m_context->m_const.screen_w / 2, 60.0,
-            ALLEGRO_ALIGN_CENTER,
-            "High score for %d balls",
-            m_ball_counts.front());
-
-        for (const auto& entry: entries) {
-
-            al_draw_textf(
-                m_context->m_const.menu_font,
-                al_map_rgb_f(1, 1, 1),
-                100.0, y,
-                ALLEGRO_ALIGN_LEFT,
-                "%s", entry.name.c_str());
-
-            al_draw_textf(
-                m_context->m_const.menu_font,
-                al_map_rgb_f(1, 1, 1),
-                m_context->m_const.screen_w - 100.0, y,
-                ALLEGRO_ALIGN_RIGHT,
-                "%d", entry.score);
-
-            y += line_height;
-        }
+        m_ui->on_draw();
     }
 
     std::shared_ptr<dick::StateNode> next_state() override

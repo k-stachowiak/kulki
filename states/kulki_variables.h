@@ -17,10 +17,12 @@ struct KulkiVariables {
     int m_score;
     int m_streak;
     int m_ball_count;
+    int m_board_width, m_board_height;
     std::vector<int> m_next_deal;
 
     KulkiVariables(KulkiConstants &constants, KulkiConfig& config);
     void gen_next_deal(int count);
+    void reset_board();
 };
 
 #endif

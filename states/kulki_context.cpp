@@ -25,43 +25,55 @@ glm::mat3 KulkiContext::current_transform()
     return scale(m_const.field_w) * translate(m_const.board_shift_x, m_const.board_shift_y);
 }
 
-std::unique_ptr<dick::GUI::Widget> KulkiContext::make_range_int_spin(
+std::unique_ptr<dick::GUI::Widget> KulkiContext::make_range_int_spin_ex(
         const std::string &name,
-        int *value, int min, int max)
+        int *value, int min, int max, void *font)
 {
+    auto larrow = m_gui.make_button(
+        m_gui.make_image(m_const.larrow_bmp),
+        [value, min, max]()
+        {
+            if (*value > min) {
+                --(*value);
+            }
+        });
+
+    auto rarrow = m_gui.make_button(
+        m_gui.make_image(m_const.rarrow_bmp),
+        [value, min, max]()
+        {
+            if (*value < max) {
+                ++(*value);
+            }
+        });
+
     auto rail = m_gui.make_container_rail(
         dick::GUI::Direction::RIGHT,
-        70.0);
+        rarrow->get_size().x * 1.125);
 
-    rail->insert(
-        m_gui.make_label(name + ": " + std::to_string(*value)),
-        dick::GUI::Alignment::MIDDLE);
+    rail->insert(std::move(larrow), dick::GUI::Alignment::MIDDLE);
+    rail->insert(std::move(rarrow), dick::GUI::Alignment::MIDDLE);
 
-    rail->insert(
-        m_gui.make_button(
-            m_gui.make_image(m_const.larrow_bmp),
-            [value, min, max]()
-            {
-                if (*value > min) {
-                    --(*value);
-                }
-            }),
-        dick::GUI::Alignment::MIDDLE);
-
-    rail->insert(
-        m_gui.make_button(
-            m_gui.make_image(m_const.rarrow_bmp),
-            [value, min, max]()
-            {
-                if (*value < max) {
-                    ++(*value);
-                }
-            }),
-        dick::GUI::Alignment::MIDDLE);
+    if (font) {
+        rail->insert(
+            m_gui.make_label_ex(name + ": " + std::to_string(*value), font),
+            dick::GUI::Alignment::MIDDLE);
+    } else {
+        rail->insert(
+            m_gui.make_label(name + ": " + std::to_string(*value)),
+            dick::GUI::Alignment::MIDDLE);
+    }
 
     std::unique_ptr<dick::GUI::Widget> result = std::move(rail);
 
     return result;
+}
+
+std::unique_ptr<dick::GUI::Widget> KulkiContext::make_range_int_spin(
+        const std::string &name,
+        int *value, int min, int max)
+{
+    return make_range_int_spin_ex(name, value, min, max, nullptr);
 }
 
 std::unique_ptr<dick::GUI::Widget> KulkiContext::make_score_label()

@@ -19,8 +19,21 @@ class OptionsState : public dick::StateNode {
             60.0);
 
         m_button_rail->insert(
-            m_context->make_range_int_spin(
-                "Balls", &m_context->m_var.m_ball_count, 3, 8),
+            m_context->make_range_int_spin_ex(
+                "Balls", &m_context->m_var.m_ball_count, 3, 8,
+                m_context->m_const.menu_font),
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+
+        m_button_rail->insert(
+            m_context->make_range_int_spin_ex(
+                "Board width", &m_context->m_var.m_board_width, 5, 9,
+                m_context->m_const.menu_font),
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
+
+        m_button_rail->insert(
+            m_context->make_range_int_spin_ex(
+                "Board height", &m_context->m_var.m_board_height, 5, 9,
+                m_context->m_const.menu_font),
             dick::GUI::Alignment::TOP | dick::GUI::Alignment::CENTER);
 
         m_button_rail->insert(
@@ -28,6 +41,7 @@ class OptionsState : public dick::StateNode {
                 m_context->m_gui.make_label_ex("Back", m_context->m_const.menu_font),
                 [this]()
                 {
+                    m_context->m_var.reset_board();
                     t_transition_required = true;
                     m_next_state = make_menu_state(m_context);
                 }),
@@ -55,6 +69,7 @@ public:
         }
 
         if (key == dick::Key::ESCAPE) {
+            m_context->m_var.reset_board();
             t_transition_required = true;
             m_next_state = make_menu_state(m_context);
         }

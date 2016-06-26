@@ -21,12 +21,25 @@ struct Board {
     std::vector<int> m_fields;
 
     // Semi-regular:
-    Board() : m_width { 0 }, m_height { 0 } {};
-    Board(const Board& x) : m_width { x.m_width }, m_height { x.m_height }, m_fields { x.m_fields } {}
-    Board(Board&& x) : m_width { x.m_width }, m_height { x.m_height }, m_fields { std::move(x.m_fields) } {}
+    Board() : m_empty_value { -1 }, m_width { 0 }, m_height { 0 } {};
+
+    Board(const Board& x) :
+        m_empty_value { x.m_empty_value },
+        m_width { x.m_width },
+        m_height { x.m_height },
+        m_fields { x.m_fields }
+    {}
+
+    Board(Board&& x) :
+        m_empty_value { x.m_empty_value },
+        m_width { x.m_width },
+        m_height { x.m_height },
+        m_fields { std::move(x.m_fields) }
+    {}
 
     Board& operator=(const Board& x)
     {
+        m_empty_value = x.m_empty_value;
         m_width = x.m_width;
         m_height = x.m_height;
         m_fields = x.m_fields;
@@ -35,6 +48,7 @@ struct Board {
 
     Board& operator=(Board&& x)
     {
+        m_empty_value = x.m_empty_value;
         m_width = x.m_width;
         m_height = x.m_height;
         m_fields = std::move(x.m_fields);

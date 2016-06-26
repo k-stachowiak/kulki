@@ -7,6 +7,8 @@ class WaitDestState : public dick::StateNode {
     KulkiContext* const m_context;
 
     int m_src_x, m_src_y;
+    int m_dst_x, m_dst_y;
+    std::deque<std::pair<int, int>> m_path;
     int m_color;
     double m_time;
 
@@ -22,6 +24,8 @@ public:
         m_context { context },
         m_src_x { src_x },
         m_src_y { src_y },
+        m_dst_x { src_x },
+        m_dst_y { src_y },
         m_color { context->m_var.m_board(src_x, src_y) },
         m_usure_phase { false }
     {
@@ -109,18 +113,42 @@ public:
                 m_next_state = make_wait_ball_state(m_context);
 
             } else {
-                std::deque<std::pair<int, int>> path;
-                if (m_context->m_var.m_board.find_path({ m_src_x, m_src_y }, { tx, ty }, path)) {
+                if (!m_path.empty()) {
                     t_transition_required = true;
                     m_next_state = make_move_state(
                         m_context,
-                        std::move(path),
+                        std::move(m_path),
                         m_context->m_const.move_period,
                         tx, ty,
                         m_color
                     );
                 }
             }
+        }
+    }
+
+    void on_cursor(dick::DimScreen) override
+    {
+        int tx = m_context->m_var.m_cursor_tile.first;
+        int ty = m_context->m_var.m_cursor_tile.second;
+
+        if (!m_context->m_var.m_board.has(tx, ty)) {
+            return;
+        }
+
+        if (tx == m_dst_x && ty == m_dst_y) {
+            return;
+        }
+
+        m_dst_x = tx;
+        m_dst_y = ty;
+
+        m_path.clear();
+        if (!m_context->m_var.m_board.find_path(
+                    { m_src_x, m_src_y },
+                    { m_dst_x, m_dst_y },
+                    m_path)) {
+            m_path.clear();
         }
     }
 
@@ -149,6 +177,17 @@ public:
         double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
         m_context->draw_ball(x, y, m_color, m_context->m_const.ball_radius, squeeze, m_context->current_transform());
+
+        if (m_path.size() > 0) {
+            auto step = m_path.begin() + 1;
+            while (step != m_path.end()) {
+                m_context->draw_feet(
+                        step->first + 0.5,
+                        step->second + 0.5,
+                        m_context->current_transform());
+                step++;
+            }
+        }
 
         m_score_label->on_draw();
         m_giveup_button->on_draw();

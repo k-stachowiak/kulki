@@ -26,6 +26,7 @@ struct KulkiConstants {
     ALLEGRO_FONT *menu_font;
     ALLEGRO_BITMAP *ball_bmp;
     ALLEGRO_BITMAP *tile_bmp;
+    ALLEGRO_BITMAP *feet_bmp;
     ALLEGRO_BITMAP *rarrow_bmp;
     ALLEGRO_BITMAP *larrow_bmp;
 

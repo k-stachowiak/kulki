@@ -15,6 +15,7 @@ KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) 
     menu_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
     ball_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/ball2.png") },
     tile_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/tile.png") },
+    feet_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/feet.png") },
     rarrow_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/rarrow.png") },
     larrow_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/larrow.png") },
 

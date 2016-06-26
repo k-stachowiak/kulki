@@ -85,7 +85,7 @@ public:
         if (m_usure_phase) {
             m_usure_dialog->on_click(button);
         } else {
-            m_debug_rail->on_click(button);
+            // m_debug_rail->on_click(button);
             m_giveup_button->on_click(button);
             int tx = m_context->m_var.m_cursor_tile.first;
             int ty = m_context->m_var.m_cursor_tile.second;
@@ -106,7 +106,7 @@ public:
         }
 
         m_score_label->on_draw();
-        m_debug_rail->on_draw();
+        // m_debug_rail->on_draw();
         m_giveup_button->on_draw();
 
         if (m_usure_phase) {

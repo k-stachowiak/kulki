@@ -47,6 +47,11 @@ struct KulkiContext : public dick::PlatformClient {
             double squeeze,
             const glm::mat3& transf);
 
+    void draw_feet(
+            double x,
+            double y,
+            const glm::mat3& transf);
+
     void draw_board(
             const Board& b,
             const glm::mat3& transf);

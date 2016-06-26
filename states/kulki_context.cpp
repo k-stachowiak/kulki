@@ -145,14 +145,6 @@ void KulkiContext::draw_field(
                     m_const.field_color.r,
                     m_const.field_color.g,
                     m_const.field_color.b));
-    } else {
-        al_draw_rectangle(
-                x1, y1, x2, y2,
-                al_map_rgb_f(
-                    m_const.field_color.r,
-                    m_const.field_color.g,
-                    m_const.field_color.b),
-                m_const.field_thick);
     }
 
 }
@@ -184,6 +176,25 @@ void KulkiContext::draw_ball(
             image_h * 0.5,
             c.x, c.y,
             xscale, yscale * squeeze,
+            0.0,
+            0);
+}
+
+void KulkiContext::draw_feet(
+        double x,
+        double y,
+        const glm::mat3& transf)
+{
+    glm::vec3 c = glm::vec3 { x, y, 1 } * transf;
+    double image_w = al_get_bitmap_width(m_const.feet_bmp);
+    double image_h = al_get_bitmap_height(m_const.feet_bmp);
+
+    al_draw_tinted_rotated_bitmap(
+            m_const.feet_bmp,
+            al_map_rgba_f(1, 1, 1, 0.5f),
+            image_w * 0.5,
+            image_h * 0.5,
+            c.x, c.y,
             0.0,
             0);
 }

@@ -7,13 +7,11 @@
 KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) :
 
     empty_field { config.get_integer("EMPTY") },
-    board_w { config.get_integer("BOARD_W") },
-    board_h { config.get_integer("BOARD_H") },
 
     gameover_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
     score_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
     menu_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
-    ball_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/ball2.png") },
+    ball_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/ball.png") },
     tile_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/tile.png") },
     feet_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/feet.png") },
     rarrow_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/rarrow.png") },
@@ -28,8 +26,6 @@ KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) 
     field_thick { config.get_real("FIELD_THICK") },
     field_color(config.get_color("FIELD_COLOR")),
     bg_color(config.get_color("BG_COLOR")),
-    board_shift_x { config.get_real("BOARD_SHIFT_X") },
-    board_shift_y { config.get_real("BOARD_SHIFT_Y") },
     ball_radius { config.get_real("BALL_RADIUS") },
     ball_jump_h { config.get_real("BALL_JUMP_H") },
 

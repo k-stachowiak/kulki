@@ -20,6 +20,7 @@ set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -g -O0 -DDICK_LOG_ENABLE")
 
 add_executable(kulki
     ./model/high_score.cpp
+    ./model/config.cpp
     ./states/kulki_constants.cpp
     ./states/kulki_variables.cpp
     ./states/high_score_display_state.cpp
@@ -33,7 +34,6 @@ add_executable(kulki
     ./states/menu_state.cpp
     ./states/options_state.cpp
     ./states/deal_state.cpp
-    ./config.cpp
     ./main.cpp
     )
 

@@ -18,8 +18,6 @@ namespace dick {
 struct KulkiConstants {
 
     int empty_field;
-    int board_w;
-    int board_h;
 
     ALLEGRO_FONT *gameover_font;
     ALLEGRO_FONT *score_font;
@@ -39,8 +37,6 @@ struct KulkiConstants {
     double field_thick;
     dick::Color field_color;
     dick::Color bg_color;
-    double board_shift_x;
-    double board_shift_y;
     double ball_radius;
     double ball_jump_h;
 

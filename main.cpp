@@ -6,7 +6,7 @@
 
 int main()
 {
-    KulkiConfig config { std::string { "config.mn" } };
+    KulkiConfig config { "config.mn", "config.var.mn" };
 
     dick::Platform platform { {
         static_cast<double>(config.get_integer("SCREEN_W")),

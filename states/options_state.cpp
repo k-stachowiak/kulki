@@ -38,10 +38,21 @@ class OptionsState : public dick::StateNode {
 
         m_button_rail->insert(
             m_context->m_gui.make_button(
+                m_context->m_gui.make_label_ex("Save", m_context->m_const.menu_font),
+                [this]()
+                {
+                    m_context->m_config.save_variables(
+                            m_context->m_var.m_board_width,
+                            m_context->m_var.m_board_height,
+                            m_context->m_var.m_ball_count);
+                }),
+            dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
+
+        m_button_rail->insert(
+            m_context->m_gui.make_button(
                 m_context->m_gui.make_label_ex("Back", m_context->m_const.menu_font),
                 [this]()
                 {
-                    m_context->m_var.reset_board();
                     t_transition_required = true;
                     m_next_state = make_menu_state(m_context);
                 }),
@@ -80,6 +91,7 @@ public:
         if (down) {
             m_button_rail->on_click(button);
             rebuild_button_rail();
+            m_context->m_var.reset_board();
         }
     }
 

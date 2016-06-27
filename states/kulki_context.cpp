@@ -10,6 +10,7 @@
 #include "kulki_context.h"
 
 KulkiContext::KulkiContext(KulkiConfig &config) :
+    m_config { config },
     m_const { m_resources, config },
     m_var { m_const, config },
     m_input_state { new dick::InputState },
@@ -22,7 +23,9 @@ KulkiContext::KulkiContext(KulkiConfig &config) :
 
 glm::mat3 KulkiContext::current_transform()
 {
-    return scale(m_const.field_w) * translate(m_const.board_shift_x, m_const.board_shift_y);
+    return scale(m_const.field_w) * translate(
+        (m_const.screen_w - m_var.m_board_width * m_const.field_w) / 2.0,
+        (m_const.screen_h - m_var.m_board_height * m_const.field_w) / 2.0);
 }
 
 std::unique_ptr<dick::GUI::Widget> KulkiContext::make_range_int_spin_ex(

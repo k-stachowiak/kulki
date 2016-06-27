@@ -10,6 +10,7 @@
 
 struct KulkiContext : public dick::PlatformClient {
 
+    KulkiConfig &m_config;
     dick::Resources m_resources;
     KulkiConstants m_const;
     KulkiVariables m_var;

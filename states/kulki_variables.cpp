@@ -14,8 +14,8 @@ KulkiVariables::KulkiVariables(KulkiConstants &constants, KulkiConfig& config) :
     m_score { 0 },
     m_streak { 0 },
     m_ball_count { config.get_integer("DEFAULT_COLOR_COUNT") },
-    m_board_width { m_constants.board_w },
-    m_board_height { m_constants.board_h }
+    m_board_width { config.get_integer("BOARD_W") },
+    m_board_height { config.get_integer("BOARD_H") }
 {
     reset_board();
 }

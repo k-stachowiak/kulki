@@ -1,3 +1,3 @@
-(bind BOARD_W 7)
+(bind BOARD_W 8)
 (bind BOARD_H 8)
 (bind DEFAULT_COLOR_COUNT 5)

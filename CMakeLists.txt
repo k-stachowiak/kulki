@@ -16,7 +16,7 @@ link_directories(
     )
 
 set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -g -O0 -DDICK_LOG_ENABLE")
+set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -g -O0 -DDICK_LOG=4")
 
 add_executable(kulki
     ./model/high_score.cpp

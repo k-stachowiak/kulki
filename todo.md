@@ -1,6 +1,4 @@
 TODO
 ====
-- Dodać panel za high score
 - Zmienić czcionkę na jakąś normalną
-- Dodać operacje hsv-rgb do skryptu konfiguracyjnego
 - Wydłużyć pokazywanie punktów po zbiciu - dodać efekty, żeby było toto widać.

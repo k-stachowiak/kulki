@@ -113,10 +113,6 @@ public:
 
     void draw(double) override
     {
-        if (m_usure_phase) {
-            m_context->draw_veil();
-        }
-
         if (m_time > 0) {
             glm::vec3 text_center = glm::vec3 { m_cx, m_cy, 1 } * m_context->current_transform();
             al_draw_textf(
@@ -128,6 +124,10 @@ public:
                 text_center.x, text_center.y,
                 ALLEGRO_ALIGN_CENTRE,
                 "+%d", m_incr);
+        }
+
+        if (m_usure_phase) {
+            m_context->draw_veil();
         }
 
         m_score_label->on_draw();

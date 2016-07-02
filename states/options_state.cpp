@@ -50,7 +50,7 @@ class OptionsState : public dick::StateNode {
 
         m_button_rail->insert(
             m_context->m_gui.make_button(
-                m_context->m_gui.make_label_ex("Back", m_context->m_const.menu_font),
+                m_context->m_gui.make_label_ex("Done", m_context->m_const.menu_font),
                 [this]()
                 {
                     t_transition_required = true;

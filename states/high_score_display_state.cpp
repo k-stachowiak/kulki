@@ -89,13 +89,16 @@ class HighScoreDisplayState : public dick::StateNode {
                     m_context->m_const.menu_font));
         }
 
-        score_rail->set_offset({ 1.5 * max_width, 0.0 });
+        score_rail->set_offset({ 2 * max_width, 0.0 });
 
         auto container = m_context->m_gui.make_container_free();
         container->insert(std::move(name_rail));
         container->insert(std::move(score_rail));
 
-        std::unique_ptr<dick::GUI::Widget> result = std::move(container);
+	auto panel = m_context->m_gui.make_container_panel();
+	panel->insert(std::unique_ptr<dick::GUI::Widget> { container.release() });
+
+        std::unique_ptr<dick::GUI::Widget> result = std::move(panel);
 
         return result;
     }
@@ -103,18 +106,7 @@ class HighScoreDisplayState : public dick::StateNode {
     void m_rebuild_ui()
     {
         auto head_widget = m_make_ball_spin();
-        head_widget->align(
-            { m_context->m_const.screen_w / 2.0, 70.0 },
-            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::TOP);
-
         auto content_widget = m_make_score_container();
-        content_widget->align(
-            {
-                m_context->m_const.screen_w / 2.0,
-                m_context->m_const.screen_h / 2.0
-            },
-            dick::GUI::Alignment::MIDDLE | dick::GUI::Alignment::CENTER);
-
         auto done_button = m_context->m_gui.make_button(
             m_context->m_gui.make_label_ex(
                 "Done",
@@ -123,17 +115,22 @@ class HighScoreDisplayState : public dick::StateNode {
             {
                 t_transition_required = true;
             });
-        done_button->align(
+
+        auto container = m_context->m_gui.make_container_box(
+             dick::GUI::Direction::DOWN,
+             20.0);
+        container->insert(std::move(head_widget));
+        container->insert(std::move(content_widget));
+        container->insert(std::move(done_button));
+
+        m_ui = m_context->m_gui.make_container_panel();
+        m_ui->insert(std::unique_ptr<dick::GUI::Widget> { container.release() });
+        m_ui->align(
             {
                 m_context->m_const.screen_w / 2.0,
-                m_context->m_const.screen_h - 70.0
+                m_context->m_const.screen_h * 0.1
             },
-            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::BOTTOM);
-
-        m_ui = m_context->m_gui.make_container_free();
-        m_ui->insert(std::move(head_widget));
-        m_ui->insert(std::move(content_widget));
-        m_ui->insert(std::move(done_button));
+            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::TOP);
     }
 
 public:

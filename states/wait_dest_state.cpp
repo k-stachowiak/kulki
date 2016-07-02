@@ -164,10 +164,6 @@ public:
 
     void draw(double) override
     {
-        if (m_usure_phase) {
-            m_context->draw_veil();
-        }
-
         double bmp_factor = double(m_time) / m_context->m_const.bump_period * 3.14;
         double sqz_factor = double(m_time) / m_context->m_const.bump_period * 2.0 * 3.14;
 
@@ -187,6 +183,10 @@ public:
                         m_context->current_transform());
                 step++;
             }
+        }
+
+        if (m_usure_phase) {
+            m_context->draw_veil();
         }
 
         m_score_label->on_draw();

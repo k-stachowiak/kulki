@@ -107,10 +107,6 @@ public:
 
     void draw(double) override
     {
-        if (m_usure_phase) {
-            m_context->draw_veil();
-        }
-
         double x1 = m_path[0].first;
         double y1 = m_path[0].second;
         double x2 = m_path[1].first;
@@ -126,6 +122,10 @@ public:
         double squeeze = -cos(sqz_factor - 0.75 * 3.14) * 0.1 + 0.9;
 
         m_context->draw_ball(x, y, m_color, m_context->m_const.ball_radius, squeeze, m_context->current_transform());
+
+        if (m_usure_phase) {
+            m_context->draw_veil();
+        }
 
         m_score_label->on_draw();
         m_giveup_button->on_draw();

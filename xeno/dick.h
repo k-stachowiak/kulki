@@ -475,6 +475,11 @@ struct GUI {
             Direction::Enum direction,
             double stride,
             const DimScreen& offset = { 0, 0 });
+
+    std::unique_ptr<WidgetContainer> make_container_box(
+            Direction::Enum direction,
+            double spacing = 0.0,
+            const DimScreen& offset = { 0, 0 });
 };
 
 // Core object

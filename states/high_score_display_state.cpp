@@ -94,8 +94,8 @@ class HighScoreDisplayState : public dick::StateNode {
         container->insert(std::move(name_rail));
         container->insert(std::move(score_rail));
 
-	auto panel = m_context->m_gui.make_container_panel();
-	panel->insert(std::unique_ptr<dick::GUI::Widget> { container.release() });
+        auto panel = m_context->m_gui.make_container_panel();
+        panel->insert(std::unique_ptr<dick::GUI::Widget> { container.release() });
 
         std::unique_ptr<dick::GUI::Widget> result = std::move(panel);
 

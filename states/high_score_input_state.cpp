@@ -35,10 +35,9 @@ public:
             m_name.pop_back();
 
         } else if (key == dick::Key::ENTER) {
-            m_high_score.add_entry({
+            m_high_score.add_entry(
                 m_context->m_var.m_ball_count,
-                m_context->m_var.m_score,
-                m_name });
+                { m_context->m_var.m_score, m_name });
             HighScore::store("high_score", m_high_score);
             t_transition_required = true;
         }

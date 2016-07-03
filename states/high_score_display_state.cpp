@@ -60,8 +60,7 @@ class HighScoreDisplayState : public dick::StateNode {
         double max_width = 0;
 
         std::vector<HighScoreEntry> entries =
-            m_high_score.get_entries_for_balls(
-                m_ball_counts[m_ball_index]);
+            m_high_score.get_entries_for_balls(m_ball_counts[m_ball_index]);
         std::reverse(begin(entries), end(entries));
 
         auto name_rail = m_context->m_gui.make_container_rail(

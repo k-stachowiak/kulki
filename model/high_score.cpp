@@ -14,13 +14,7 @@ namespace {
             const HighScoreEntry &x,
             const HighScoreEntry &y)
     {
-        if (x.balls < y.balls) {
-            return true;
-        } else if (x.balls > y.balls) {
-            return false;
-        } else {
-            return x.score < y.score;
-        }
+        return x.score < y.score;
     }
 
 }
@@ -35,9 +29,10 @@ HighScore HighScore::load(const std::string& filename, int max_entries)
 
     HighScore result;
     result.m_max_entries = max_entries;
+    int balls;
     HighScoreEntry entry;
-    while (in >> entry.balls >> entry.score >> entry.name) {
-        result.m_entries.push_back(entry);
+    while (in >> balls >> entry.score >> entry.name) {
+        result.m_entries[balls].push_back(entry);
     }
 
     return result;
@@ -51,46 +46,43 @@ void HighScore::store(const std::string& filename, const HighScore& hs)
         exit(1);
     }
 
-    for (const auto &entry : hs.m_entries) {
-        out << entry.balls << ' ' << entry.score << ' ' << entry.name << std::endl;
+    for (const auto& pr : hs.m_entries) {
+        for (const auto& entry : pr.second) {
+            out << pr.first << ' ' << entry.score << ' ' << entry.name << std::endl;
+        }
     }
 }
 
 bool HighScore::can_insert(int balls, int score) const
 {
-    std::vector<HighScoreEntry> entries = get_entries_for_balls(balls);
+    const std::vector<HighScoreEntry>& entries = m_entries.at(balls);
     if (static_cast<int>(entries.size()) < m_max_entries) {
         return true;
     } else {
-        return score > entries.back().score;
+        auto min = std::min_element(
+            begin(entries),
+            end(entries),
+            high_score_entry_compare);
+        return score > min->score;
     }
 }
 
 std::vector<int> HighScore::get_ball_counts() const
 {
     std::vector<int> result;
-    for (const auto &entry: m_entries) {
-        result.push_back(entry.balls);
+    for (const auto& pr: m_entries) {
+        result.push_back(pr.first);
     }
-    std::sort(begin(result), end(result));
-    return { begin(result), std::unique(begin(result), end(result)) };
-}
-
-std::vector<HighScoreEntry> HighScore::get_entries_for_balls(int balls) const
-{
-    std::vector<HighScoreEntry> result;
-    std::copy_if(
-        begin(m_entries), end(m_entries),
-        std::back_inserter(result),
-        [balls](const HighScoreEntry &entry) {
-            return entry.balls == balls;
-        });
-    std::sort(begin(result), end(result), high_score_entry_compare);
     return result;
 }
 
-void HighScore::add_entry(const HighScoreEntry &entry)
+const std::vector<HighScoreEntry>& HighScore::get_entries_for_balls(int balls) const
 {
-    m_entries.push_back(entry);
+    return m_entries.at(balls);
+}
+
+void HighScore::add_entry(int balls, const HighScoreEntry &entry)
+{
+    m_entries[balls].push_back(entry);
 }
 

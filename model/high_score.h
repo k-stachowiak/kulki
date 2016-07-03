@@ -6,11 +6,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "config.h"
 
 struct HighScoreEntry {
-    int balls;
     int score;
     std::string name;
 
@@ -26,7 +26,7 @@ struct HighScoreEntry {
 
 class HighScore {
     int m_max_entries;
-    std::vector<HighScoreEntry> m_entries;
+    std::unordered_map<int, std::vector<HighScoreEntry>> m_entries;
 
 public:
     static HighScore load(const std::string& filename, int max_entries);
@@ -34,9 +34,9 @@ public:
 
     bool can_insert(int balls, int score) const;
     std::vector<int> get_ball_counts() const;
-    std::vector<HighScoreEntry> get_entries_for_balls(int balls) const;
+    const std::vector<HighScoreEntry>& get_entries_for_balls(int balls) const;
 
-    void add_entry(const HighScoreEntry& entry);
+    void add_entry(int balls, const HighScoreEntry& entry);
 };
 
 #endif

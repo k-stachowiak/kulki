@@ -4,13 +4,15 @@
 #include "dick.h"
 #include "kulki_constants.h"
 
+const char *font_base = "data/COLWELL_.ttf";
+
 KulkiConstants::KulkiConstants(dick::Resources &resources, KulkiConfig &config) :
 
     empty_field { config.get_integer("EMPTY") },
 
-    gameover_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("GAMEOVER_FONT_SIZE")) },
-    score_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("SCORE_FONT_SIZE")) },
-    menu_font { (ALLEGRO_FONT*)resources.get_font("data/neuropol_x_rg.ttf", -config.get_integer("MENU_FONT_SIZE")) },
+    gameover_font { (ALLEGRO_FONT*)resources.get_font(font_base, -config.get_integer("GAMEOVER_FONT_SIZE")) },
+    score_font { (ALLEGRO_FONT*)resources.get_font(font_base, -config.get_integer("SCORE_FONT_SIZE")) },
+    menu_font { (ALLEGRO_FONT*)resources.get_font(font_base, -config.get_integer("MENU_FONT_SIZE")) },
     ball_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/ball.png") },
     tile_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/tile.png") },
     feet_bmp { (ALLEGRO_BITMAP*)resources.get_image("data/feet.png") },

@@ -127,9 +127,9 @@ class HighScoreDisplayState : public dick::StateNode {
         m_ui->align(
             {
                 m_context->m_const.screen_w / 2.0,
-                m_context->m_const.screen_h * 0.1
+                m_context->m_const.screen_h / 2.0
             },
-            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::TOP);
+            dick::GUI::Alignment::CENTER | dick::GUI::Alignment::MIDDLE);
     }
 
 public:

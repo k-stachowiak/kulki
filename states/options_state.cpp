@@ -9,34 +9,34 @@
 class OptionsState : public dick::StateNode {
 
     KulkiContext* m_context;
-    std::unique_ptr<dick::GUI::WidgetContainer> m_button_rail;
+    std::unique_ptr<dick::GUI::WidgetContainer> m_ui;
     std::shared_ptr<StateNode> m_next_state;
 
-    void rebuild_button_rail()
+    void rebuild_ui()
     {
-        m_button_rail = m_context->m_gui.make_container_rail(
+        auto button_rail = m_context->m_gui.make_container_rail(
             dick::GUI::Direction::DOWN,
             60.0);
 
-        m_button_rail->insert(
+        button_rail->insert(
             m_context->make_range_int_spin_ex(
                 "Balls", &m_context->m_var.m_ball_count, 3, 8,
                 m_context->m_const.menu_font),
             dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
-        m_button_rail->insert(
+        button_rail->insert(
             m_context->make_range_int_spin_ex(
                 "Board width", &m_context->m_var.m_board_width, 5, 9,
                 m_context->m_const.menu_font),
             dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
-        m_button_rail->insert(
+        button_rail->insert(
             m_context->make_range_int_spin_ex(
                 "Board height", &m_context->m_var.m_board_height, 5, 9,
                 m_context->m_const.menu_font),
             dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
-        m_button_rail->insert(
+        button_rail->insert(
             m_context->m_gui.make_button(
                 m_context->m_gui.make_label_ex("Save", m_context->m_const.menu_font),
                 [this]()
@@ -48,7 +48,7 @@ class OptionsState : public dick::StateNode {
                 }),
             dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
-        m_button_rail->insert(
+        button_rail->insert(
             m_context->m_gui.make_button(
                 m_context->m_gui.make_label_ex("Done", m_context->m_const.menu_font),
                 [this]()
@@ -58,7 +58,9 @@ class OptionsState : public dick::StateNode {
                 }),
             dick::GUI::Alignment::TOP | dick::GUI::Alignment::LEFT);
 
-        m_button_rail->align(
+        m_ui = m_context->m_gui.make_container_panel();
+        m_ui->insert(std::unique_ptr<dick::GUI::Widget> { button_rail.release() });
+        m_ui->align(
             {
                 m_context->m_const.screen_w / 2.0,
                 m_context->m_const.screen_h / 2.0
@@ -70,7 +72,7 @@ public:
     OptionsState(KulkiContext* context) :
         m_context { context }
     {
-        rebuild_button_rail();
+        rebuild_ui();
     }
 
     void on_key(dick::Key key, bool down) override
@@ -89,8 +91,8 @@ public:
     void on_button(dick::Button button, bool down) override
     {
         if (down) {
-            m_button_rail->on_click(button);
-            rebuild_button_rail();
+            m_ui->on_click(button);
+            rebuild_ui();
             m_context->m_var.reset_board();
         }
     }
@@ -98,7 +100,7 @@ public:
     void draw(double) override
     {
         m_context->draw_veil();
-        m_button_rail->on_draw();
+        m_ui->on_draw();
     }
 
     std::shared_ptr<dick::StateNode> next_state() override

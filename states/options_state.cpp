@@ -14,9 +14,9 @@ class OptionsState : public dick::StateNode {
 
     void rebuild_ui()
     {
-        auto button_rail = m_context->m_gui.make_container_rail(
+        auto button_rail = m_context->m_gui.make_container_box(
             dick::GUI::Direction::DOWN,
-            60.0);
+            20.0);
 
         button_rail->insert(
             m_context->make_range_int_spin_ex(
